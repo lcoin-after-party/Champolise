@@ -6,7 +6,7 @@ import logging
 from dotenv import load_dotenv
 import os
 
-from features.bobiz_resopnses import handle_bobiz
+from features.bobiz_responses import handle_bobiz
 from features.library_to_forum import post_library_messages_to_forum
 from filters.suggestions_to_forum import post_suggestions_to_priorities
 
