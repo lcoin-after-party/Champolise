@@ -4,10 +4,11 @@ const {
     AttachmentBuilder
 } = require("discord.js");
 
-const SUGGESTION_CHANNEL_ID = "1441660601460850708";
-const PRIORITIES_FORUM_ID = "1441702171136626768";
+const SUGGESTION_CHANNEL_ID = "1441747382025977907";
+const PRIORITIES_FORUM_ID = "1441747613442379897";
 const MESSAGE_FETCH_LIMIT = 50;
 const WHITE_CHECK = "✅";
+const MINIMUM_REACTIONS = 0;
 
 
 function getSuggestionChannels(client) {
@@ -62,42 +63,32 @@ async function fetchSuggestions(channel, limit) {
         const ra = getCheckmarkCount(a);
         const rb = getCheckmarkCount(b);
 
-        if (ra !== rb) return rb - ra; 
-        return a.createdTimestamp - b.createdTimestamp; 
+        if (ra !== rb) return rb - ra;
+        return a.createdTimestamp - b.createdTimestamp;
     });
 
     return arr;
 }
 
-
 function extractSuggestionFields(msg) {
     const lines = msg.content.split("\n");
 
-    let title = "";
-    let desc = [];
-    let found = false;
+    if (lines.length === 0) return null;
 
-    for (const line of lines) {
-        const trimmed = line.trim();
+    // Check the first 4 lines (or fewer if there aren't 4)
+    for (let i = 0; i < Math.min(4, lines.length); i++) {
+        const line = lines[i].trim();
+        const match = line.match(/^(?:[^a-zA-Z\u0600-\u06FF]*)(title|titre|العنوان)\s*:\s*(.+)$/i);
 
-        if (!found && trimmed.toLowerCase().startsWith("title")) {
-            if (trimmed.includes(":")) {
-                title = trimmed.split(":")[1]?.trim() || "";
-                found = true;
-                continue;
-            }
+        if (match) {
+            const title = match[2].trim();
+            const content = lines.slice(i + 1).join("\n").trim(); // All lines after the matched line
+            return { title, content };
         }
-
-        if (found) desc.push(line);
     }
 
-    if (!title || title.length < 1)
-        return null;
-
-    return {
-        title,
-        content: desc.join("\n").trim()
-    };
+    // No title found in the first 4 lines
+    return null;
 }
 
 
@@ -153,7 +144,11 @@ async function postSuggestionsToPriorities(client, limit = MESSAGE_FETCH_LIMIT) 
 
     let posted = 0;
 
-for (const msg of suggestions.reverse()) {
+    for (const msg of suggestions.reverse()) {
+
+        // ✅ MINIMAL CHANGE ADDED HERE
+        if (getCheckmarkCount(msg) < MINIMUM_REACTIONS) continue;
+
         const fields = extractSuggestionFields(msg);
 
         if (!fields) continue;
