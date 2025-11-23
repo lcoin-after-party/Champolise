@@ -4,9 +4,9 @@ const {
     AttachmentBuilder
 } = require("discord.js");
 
-const LIBRARY_CHANNEL_ID = "1441676274790563920";
-const BEST_BOOKS_FORUM_ID = "1441676312560533658";
-const MESSAGE_FETCH_LIMIT = 50;
+const LIBRARY_CHANNEL_ID = "1441747809941459074";
+const BEST_BOOKS_FORUM_ID = "1441747926924791990";
+const MESSAGE_FETCH_LIMIT = 100;
 
 function getChannels(client) {
     const library = client.channels.cache.get(LIBRARY_CHANNEL_ID);
@@ -46,7 +46,7 @@ async function clearForumThreads(forum) {
 }
 
 function getCheckmarkCount(message) {
-    const reaction = message.reactions.cache.find(r => r.emoji.name === "✅");
+    const reaction = message.reactions.cache.find(r => (r.emoji.name === "✅" || r.emoji.name === ":heart:"));
     return reaction ? reaction.count : 0;
 }
 
@@ -58,22 +58,33 @@ async function fetchAndSortMessages(channel, limit) {
 }
 
 function extractFields(msg) {
-    const lines = msg.content.split("\n").map(l => l.trim());
+    const lines = msg.content.split("\n");
+
+    if (lines.length === 0) return { title: "", description: "" };
 
     let title = "";
-    let description = [];
-    let found = false;
+    let titleLineIndex = -1;
 
-    for (const line of lines) {
-        if (!found && line.toLowerCase().startsWith("title :")) {
-            title = line.split(":")[1].trim();
-            found = true;
-        } else if (found) {
-            description.push(line);
+    // Check the first 4 lines for a title
+    for (let i = 0; i < Math.min(4, lines.length); i++) {
+        const line = lines[i].trim();
+        const match = line.match(/(?:.*?)(title|titre|العنوان)\s*:\s*(.+)/i);
+        if (match) {
+            title = match[2].trim();
+            titleLineIndex = i;
+            break;
         }
     }
 
-    return { title, description: description.join("\n") };
+    if (!title) {
+        // No title found in the first 4 lines
+        return { title: "", description: "" };
+    }
+
+    // Description is all lines after the title line
+    const description = lines.slice(titleLineIndex + 1).join("\n");
+
+    return { title, description };
 }
 
 async function getAttachments(msg) {

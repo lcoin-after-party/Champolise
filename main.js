@@ -13,7 +13,7 @@ const { postLibraryMessagesToForum } = require("./features/library_to_forum");
 const { postSuggestionsToPriorities } = require("./filters/suggestions_to_forum");
 const { handleBobiz } = require("./features/bobiz_responses");
 
-const MASTER_ROLE_ID = "1441923802937430156";
+const MASTER_ROLE_ID = "1442215198474633277";
 
 function hasMasterRole(member) {
     return member.roles.cache.has(MASTER_ROLE_ID);
@@ -110,7 +110,7 @@ client.on("messageCreate", async (message) => {
 
     // 9lat ma ydar 
     if (cmd === "bobiz") {
-        await handleBobiz(message);  // call the separate logic
+        await handleBobiz(message);  
     }
 
 
