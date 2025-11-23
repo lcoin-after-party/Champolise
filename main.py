@@ -101,8 +101,7 @@ async def sync_sugg(ctx):
 # 9lat ma ydar 
 @bot.command()
 async def bobiz(ctx):
-    await handle_bobiz(ctx)  # call the separate logic
-
+    await handle_bobiz(ctx)  
 
 
 
