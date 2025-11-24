@@ -1,11 +1,14 @@
+// load environment variables
+require("dotenv").config();
+
 const {
     ForumChannel,
     TextChannel,
     AttachmentBuilder
 } = require("discord.js");
 
-const SUGGESTION_CHANNEL_ID = "1441747382025977907";
-const PRIORITIES_FORUM_ID = "1441747613442379897";
+const SUGGESTION_CHANNEL_ID = process.env.SUGGESTION_CHANNEL_ID;
+const PRIORITIES_SUGGESTION_FORUM_ID = process.env.PRIORITIES_SUGGESTION_FORUM_ID;
 const MESSAGE_FETCH_LIMIT = 50;
 const WHITE_CHECK = "✅";
 const MINIMUM_REACTIONS = 0;
@@ -13,7 +16,7 @@ const MINIMUM_REACTIONS = 0;
 
 function getSuggestionChannels(client) {
     const suggestion = client.channels.cache.get(SUGGESTION_CHANNEL_ID);
-    const priorities = client.channels.cache.get(PRIORITIES_FORUM_ID);
+    const priorities = client.channels.cache.get(PRIORITIES_SUGGESTION_FORUM_ID);
 
     const errors = [];
 

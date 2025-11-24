@@ -1,5 +1,3 @@
-// main.js
-
 // load environment variables
 require("dotenv").config();
 
@@ -13,9 +11,9 @@ const { postLibraryMessagesToForum } = require("./features/library_to_forum");
 const { postSuggestionsToPriorities } = require("./filters/suggestions_to_forum");
 const { handleBobiz } = require("./features/bobiz_responses");
 
-const MASTER_ROLE_ID = "1442215198474633277";
-const LIBRARY_CHANNEL_ID = "1441747809941459074";
-const SUGGESTION_CHANNEL_ID = "1441747382025977907";
+const MASTER_ROLE_ID = process.env.BOT_MASTER_ROLE_ID;
+const LIBRARY_CHANNEL_ID = process.env.LIBRARY_CHANNEL_ID;
+const SUGGESTION_CHANNEL_ID = process.env.SUGGESTION_CHANNEL_ID;
 
 function hasMasterRole(member) {
     return member.roles.cache.has(MASTER_ROLE_ID);

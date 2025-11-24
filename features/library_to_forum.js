@@ -1,16 +1,19 @@
+// load environment variables
+require("dotenv").config();
+
 const {
     ForumChannel,
     TextChannel,
     AttachmentBuilder
 } = require("discord.js");
 
-const LIBRARY_CHANNEL_ID = "1441747809941459074";
-const BEST_BOOKS_FORUM_ID = "1441747926924791990";
+const LIBRARY_CHANNEL_ID = process.env.LIBRARY_CHANNEL_ID;
+const LIBRARY_RANKED_BOOKS_ID = process.env.LIBRARY_RANKED_BOOKS_ID;
 const MESSAGE_FETCH_LIMIT = 100;
 
 function getChannels(client) {
     const library = client.channels.cache.get(LIBRARY_CHANNEL_ID);
-    const bestBooks = client.channels.cache.get(BEST_BOOKS_FORUM_ID);
+    const bestBooks = client.channels.cache.get(LIBRARY_RANKED_BOOKS_ID);
 
     const errors = [];
 
