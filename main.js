@@ -14,12 +14,24 @@ const { postSuggestionsToPriorities } = require("./filters/suggestions_to_forum"
 const { handleBobiz } = require("./features/bobiz_responses");
 
 const MASTER_ROLE_ID = "1442215198474633277";
+const LIBRARY_CHANNEL_ID = "1441747809941459074";
+const SUGGESTION_CHANNEL_ID = "1441747382025977907";
 
 function hasMasterRole(member) {
     return member.roles.cache.has(MASTER_ROLE_ID);
 }
 
+function hasTitle(messageContent) {
+    const lines = messageContent.split("\n");
 
+    for (let i = 0; i < Math.min(4, lines.length); i++) {
+        const line = lines[i].trim();
+        if (/(?:.*?)(title|titre|العنوان)\s*:\s*(.+)/i.test(line)) {
+            return true; // title found
+        }
+    }
+    return false; // no title found
+}
 // create bot client with necessary permissions
 const client = new Client({
     intents: [
@@ -64,6 +76,26 @@ client.on("messageCreate", async (message) => {
 
     // ignore bot messages
     if (message.author.bot) return;
+
+
+    // scans the library channel, checks for proper message format,
+    // counts reacts with the emoji "✅",
+    // then posts messages into the library forum sorted by reaction count
+    if (message.channel.id === LIBRARY_CHANNEL_ID) {
+        if (hasTitle(message.content)) {
+            await postLibraryMessagesToForum(client);
+        }
+    }
+
+    // scans suggestions channel, looks for messages with a Title field,
+    // counts reacts with "✅", collects images,
+    // then posts them into the priorities forum sorted by reaction count
+    if (message.channel.id === SUGGESTION_CHANNEL_ID) {
+        if (hasTitle(message.content)) {
+            await postSuggestionsToPriorities(client);
+        }
+    }
+
 
     // check if message starts with command prefix
     if (!message.content.startsWith(PREFIX)) return;
