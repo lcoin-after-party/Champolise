@@ -2,3 +2,4 @@ champolis_logs.log
 node_modules/
 .env
 change-author.py
+features/processedBooks.json
