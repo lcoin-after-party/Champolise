@@ -96,11 +96,16 @@ async function fetchRecentMessages(channel, limit) {
 
 // ----------- REACTIONS & FIELDS -----------
 function getCheckmarkCount(message) {
+    if("reactions" in message) return message.reaction
     const reaction = message.reactions.cache.find(r => r.emoji.name === "✅" || r.emoji.name === "❤️");
     return reaction ? reaction.count : 0;
 }
 
 function extractFields(msg) {
+if ("title" in msg && "description" in msg) {
+    const {title , description} = msg
+    return { title, description };
+}
     const lines = msg.content.split("\n");
     if (lines.length === 0) return { title: "", description: "" };
 
@@ -170,6 +175,7 @@ async function postLibraryMessagesToForum(client) {
     } else {
         console.log("[INFO] Fetching latest messages...");
         messages = await fetchRecentMessages(library, MESSAGE_FETCH_LIMIT);
+        messages.push(...Object.values(processedBooks))
     }
 
     // --- Process new messages ---
@@ -207,8 +213,7 @@ async function postLibraryMessagesToForum(client) {
 
 // --- Sort by reactions descending, then reverse for posting ---
 const booksArray = Object.values(processedBooks)
-    .sort((a, b) => b.reactions - a.reactions)
-    .reverse(); // now the highest reactions are posted last
+    .sort((a, b) => b.reactions - a.reactions);
 
     // --- Clear forum threads ---
     await clearForumThreads(bestBooks);
