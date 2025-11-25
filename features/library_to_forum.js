@@ -318,6 +318,7 @@ async function processMessages(messages, processedBooks, library) {
 
 /**
  * Updates reaction counts for books from the library channel.
+ * Removes entries from processedBooks if the message cannot be fetched.
  * @param {object} processedBooks
  * @param {TextChannel} library
  */
@@ -326,9 +327,20 @@ async function updateReactionsFromLibrary(processedBooks, library) {
         try {
             const messageId = url.split("/").pop();
             const msg = await library.messages.fetch(messageId, { cache: false });
-            if (msg) processedBooks[url].reactions = await getCheckmarkCount(msg);
+
+            if (msg) {
+                processedBooks[url].reactions = await getCheckmarkCount(msg);
+            } else {
+                console.log(`[WARN] Message not found for ${url}, removing from JSON`);
+                delete processedBooks[url]; // Remove from JSON
+            }
         } catch (err) {
-            console.log(`[WARN] Could not fetch message for ${url}:`, err.message);
+            if (err.message.includes("Unknown Message")) {
+                console.log(`[WARN] Message ${url} deleted or unknown, removing from JSON`);
+                delete processedBooks[url]; // Remove deleted/unknown messages
+            } else {
+                console.log(`[WARN] Could not fetch message for ${url}:`, err.message);
+            }
         }
     }
 }
