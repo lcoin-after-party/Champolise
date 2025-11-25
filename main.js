@@ -10,6 +10,7 @@ const {
 const { postLibraryMessagesToForum } = require("./features/library_to_forum");
 const { postSuggestionsToPriorities } = require("./filters/suggestions_to_forum");
 const { handleBobiz } = require("./features/bobiz_responses");
+const { handleAttack } = require("./features/attack_responses");
 const { getServerConfig, serverExists } = require("./databases/servers");
 
 function hasMasterRole(member, guildId) {
@@ -70,15 +71,15 @@ client.on("messageCreate", async (message) => {
 
     // ignore bot messages
     if (message.author.bot) return;
-    
+
     const guildId = message.guild.id;
-    
+
     // Check if this server is configured
     if (!serverExists(guildId)) {
         console.log(`[WARN] Server ${guildId} not found in configuration`);
         return;
     }
-    
+
     const config = getServerConfig(guildId);
 
     // scans the library channel, checks for proper message format,
@@ -105,10 +106,10 @@ client.on("messageCreate", async (message) => {
     // extract the command name
     const [cmd] = message.content.slice(PREFIX.length).split(" ");
 
-/* ========================================================================
-   SECTION - C START
-   this section contains things that related to bot commands
-   ======================================================================== */
+    /* ========================================================================
+       SECTION - C START
+       this section contains things that related to bot commands
+       ======================================================================== */
 
     // command: sync library
     // scans the library channel, checks for proper message format,
@@ -121,7 +122,7 @@ client.on("messageCreate", async (message) => {
             return message.reply("knsme3 4ir ll3esas , 7ta tched lgrade w sowel fya")
         }
 
-        await message.delete().catch(() => {});
+        await message.delete().catch(() => { });
         await postLibraryMessagesToForum(client, guildId);
     }
 
@@ -136,18 +137,24 @@ client.on("messageCreate", async (message) => {
             return message.reply("knsme3 4ir ll3esas , 7ta tched lgrade w sowel fya")
         }
 
-        await message.delete().catch(() => {});
+        await message.delete().catch(() => { });
         await postSuggestionsToPriorities(client, guildId);
     }
 
     // 9lat ma ydar 
     if (cmd === "bobiz") {
-        await handleBobiz(message);  
+        await handleBobiz(message);
+    }
+    const validCommands = ["attack", "korose", "malhada", "jibo", "mal hada","مال هادا"];
+    if (validCommands.includes(cmd.toLowerCase())) {
+        await handleAttack(message);
     }
 
-/* ========================================================================
-   SECTION - C END
-   ======================================================================== */
+
+
+    /* ========================================================================
+       SECTION - C END
+       ======================================================================== */
 
 });
 
