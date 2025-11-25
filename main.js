@@ -10,13 +10,12 @@ const {
 const { postLibraryMessagesToForum } = require("./features/library_to_forum");
 const { postSuggestionsToPriorities } = require("./filters/suggestions_to_forum");
 const { handleBobiz } = require("./features/bobiz_responses");
+const { getServerConfig, serverExists } = require("./databases/servers");
 
-const MASTER_ROLE_ID = process.env.BOT_MASTER_ROLE_ID;
-const LIBRARY_CHANNEL_ID = process.env.LIBRARY_CHANNEL_ID;
-const SUGGESTION_CHANNEL_ID = process.env.SUGGESTION_CHANNEL_ID;
-
-function hasMasterRole(member) {
-    return member.roles.cache.has(MASTER_ROLE_ID);
+function hasMasterRole(member, guildId) {
+    const config = getServerConfig(guildId);
+    if (!config) return false;
+    return member.roles.cache.has(config.BOT_MASTER_ROLE_ID);
 }
 
 function hasTitle(messageContent) {
@@ -30,6 +29,7 @@ function hasTitle(messageContent) {
     }
     return false; // no title found
 }
+
 // create bot client with necessary permissions
 const client = new Client({
     intents: [
@@ -44,8 +44,6 @@ const client = new Client({
 
 // prefix for bot commands
 const PREFIX = "--";
-
-
 
 /* ========================================================================
    SECTION - A START
@@ -63,8 +61,6 @@ client.once("ready", () => {
    SECTION - A END
    ======================================================================== */
 
-
-
 /* ========================================================================
    SECTION - B START
    this section contains things related to normal messages
@@ -74,34 +70,40 @@ client.on("messageCreate", async (message) => {
 
     // ignore bot messages
     if (message.author.bot) return;
-
+    
+    const guildId = message.guild.id;
+    
+    // Check if this server is configured
+    if (!serverExists(guildId)) {
+        console.log(`[WARN] Server ${guildId} not found in configuration`);
+        return;
+    }
+    
+    const config = getServerConfig(guildId);
 
     // scans the library channel, checks for proper message format,
     // counts reacts with the emoji "✅",
     // then posts messages into the library forum sorted by reaction count
-    if (message.channel.id === LIBRARY_CHANNEL_ID) {
+    if (message.channel.id === config.LIBRARY_CHANNEL_ID) {
         if (hasTitle(message.content)) {
-            await postLibraryMessagesToForum(client);
+            await postLibraryMessagesToForum(client, guildId);
         }
     }
 
     // scans suggestions channel, looks for messages with a Title field,
     // counts reacts with "✅", collects images,
     // then posts them into the priorities forum sorted by reaction count
-    if (message.channel.id === SUGGESTION_CHANNEL_ID) {
+    if (message.channel.id === config.SUGGESTION_CHANNEL_ID) {
         if (hasTitle(message.content)) {
-            await postSuggestionsToPriorities(client);
+            await postSuggestionsToPriorities(client, guildId);
         }
     }
-
 
     // check if message starts with command prefix
     if (!message.content.startsWith(PREFIX)) return;
 
     // extract the command name
     const [cmd] = message.content.slice(PREFIX.length).split(" ");
-
-
 
 /* ========================================================================
    SECTION - C START
@@ -115,12 +117,12 @@ client.on("messageCreate", async (message) => {
     if (cmd === "sync_lib") {
 
         // check master role
-        if (!hasMasterRole(message.member)) {
+        if (!hasMasterRole(message.member, guildId)) {
             return message.reply("knsme3 4ir ll3esas , 7ta tched lgrade w sowel fya")
         }
 
         await message.delete().catch(() => {});
-        await postLibraryMessagesToForum(client);
+        await postLibraryMessagesToForum(client, guildId);
     }
 
     // command: sync suggestions
@@ -130,12 +132,12 @@ client.on("messageCreate", async (message) => {
     if (cmd === "sync_sugg") {
 
         // check master role
-        if (!hasMasterRole(message.member)) {
+        if (!hasMasterRole(message.member, guildId)) {
             return message.reply("knsme3 4ir ll3esas , 7ta tched lgrade w sowel fya")
         }
 
         await message.delete().catch(() => {});
-        await postSuggestionsToPriorities(client);
+        await postSuggestionsToPriorities(client, guildId);
     }
 
     // 9lat ma ydar 
@@ -143,13 +145,11 @@ client.on("messageCreate", async (message) => {
         await handleBobiz(message);  
     }
 
-
 /* ========================================================================
    SECTION - C END
    ======================================================================== */
 
 });
-
 
 /* ========================================================================
    BOT LOGIN

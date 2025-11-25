@@ -1,7 +1,50 @@
 {
+  "name": "champolise-discord-bot",
+  "version": "2.0.0",
+  "description": "Multi-server Discord bot for library and suggestions management",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "node main.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose",
+    "test:unit": "jest tests/databases tests/filters tests/features",
+    "test:integration": "jest tests/integration",
+    "test:main": "jest tests/main.test.js",
+    "lint": "echo 'Add eslint if needed'",
+    "format": "echo 'Add prettier if needed'"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "discord.js",
+    "library",
+    "suggestions",
+    "multi-server"
+  ],
+  "author": "Hamza",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "dependencies": {
     "discord.js": "^14.25.1",
     "dotenv": "^17.2.3",
     "node-fetch": "^3.3.2"
-  }
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/champolise-discord-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/champolise-discord-bot/issues"
+  },
+  "homepage": "https://github.com/yourusername/champolise-discord-bot#readme"
 }

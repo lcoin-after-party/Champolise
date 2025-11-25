@@ -1,6 +1,3 @@
-// load environment variables
-require("dotenv").config();
-
 const fs = require("fs");
 const path = require("path");
 const {
@@ -9,43 +6,63 @@ const {
     AttachmentBuilder
 } = require("discord.js");
 
-const LIBRARY_CHANNEL_ID = process.env.LIBRARY_CHANNEL_ID;
-const LIBRARY_RANKED_BOOKS_ID = process.env.LIBRARY_RANKED_BOOKS_ID;
+const { getServerConfig } = require("../databases/servers");
+
 const MESSAGE_FETCH_LIMIT = 100;
-const PROCESSED_FILE = path.join(__dirname, "processedBooks.json");
 
 // ----------- DYNAMIC NODE-FETCH IMPORT -----------
 const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 // ----------- JSON HANDLING -----------
-function loadProcessedBooks() {
-    if (!fs.existsSync(PROCESSED_FILE)) return {};
+function getProcessedFilePath(guildId) {
+    return path.join(__dirname, `processedBooks_${guildId}.json`);
+}
+
+function loadProcessedBooks(guildId) {
+    const filePath = getProcessedFilePath(guildId);
+    if (!fs.existsSync(filePath)) return {};
     try {
-        return JSON.parse(fs.readFileSync(PROCESSED_FILE, "utf-8"));
+        return JSON.parse(fs.readFileSync(filePath, "utf-8"));
     } catch (err) {
         console.log("[ERROR] Failed to load processed books:", err);
         return {};
     }
 }
 
-function saveProcessedBooks(data) {
+function saveProcessedBooks(guildId, data) {
+    const filePath = getProcessedFilePath(guildId);
     try {
-        fs.writeFileSync(PROCESSED_FILE, JSON.stringify(data, null, 2));
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
     } catch (err) {
         console.log("[ERROR] Failed to save processed books:", err);
     }
 }
 
 // ----------- CHANNELS -----------
-function getChannels(client) {
-    const library = client.channels.cache.get(LIBRARY_CHANNEL_ID);
-    const bestBooks = client.channels.cache.get(LIBRARY_RANKED_BOOKS_ID);
+async function getChannels(client, guildId) {
+    const config = getServerConfig(guildId);
+    
+    if (!config) {
+        return { library: null, bestBooks: null, errors: [`Server ${guildId} not configured`] };
+    }
 
     const errors = [];
-    if (!(library instanceof TextChannel))
-        errors.push(`Library channel missing or not a TextChannel`);
-    if (!(bestBooks instanceof ForumChannel))
-        errors.push(`Forum channel missing or not a ForumChannel`);
+    let library = null;
+    let bestBooks = null;
+
+    try {
+        library = await client.channels.fetch(config.LIBRARY_CHANNEL_ID, { cache: false });
+        if (!(library instanceof TextChannel)) errors.push(`Library channel missing or not a TextChannel`);
+    } catch {
+        errors.push(`Could not fetch library channel from API`);
+    }
+
+    try {
+        bestBooks = await client.channels.fetch(config.LIBRARY_RANKED_BOOKS_ID, { cache: false });
+        if (!(bestBooks instanceof ForumChannel)) errors.push(`Forum channel missing or not a ForumChannel`);
+    } catch {
+        errors.push(`Could not fetch forum channel from API`);
+    }
 
     return { library, bestBooks, errors };
 }
@@ -77,7 +94,7 @@ async function fetchAllMessages(channel) {
     let lastId;
 
     while (true) {
-        const options = { limit: 100 };
+        const options = { limit: 100, cache: false };
         if (lastId) options.before = lastId;
 
         const messages = await channel.messages.fetch(options);
@@ -90,22 +107,26 @@ async function fetchAllMessages(channel) {
 }
 
 async function fetchRecentMessages(channel, limit) {
-    const msgs = await channel.messages.fetch({ limit });
+    const msgs = await channel.messages.fetch({ limit, cache: false });
     return [...msgs.values()];
 }
 
 // ----------- REACTIONS & FIELDS -----------
-function getCheckmarkCount(message) {
-    if("reactions" in message) return message.reaction
-    const reaction = message.reactions.cache.find(r => r.emoji.name === "✅" || r.emoji.name === "❤️");
-    return reaction ? reaction.count : 0;
+async function getCheckmarkCount(message) {
+    try {
+        const reactions = await message.reactions.fetch();
+        const reaction = reactions.find(r => r.emoji.name === "✅" || r.emoji.name === "❤️");
+        return reaction ? reaction.count : 0;
+    } catch {
+        return 0;
+    }
 }
 
 function extractFields(msg) {
-if ("title" in msg && "description" in msg) {
-    const {title , description} = msg
-    return { title, description };
-}
+    if ("title" in msg && "description" in msg) {
+        const { title, description } = msg;
+        return { title, description };
+    }
     const lines = msg.content.split("\n");
     if (lines.length === 0) return { title: "", description: "" };
 
@@ -159,23 +180,23 @@ async function postMessageToForum(forum, title, content, files) {
 }
 
 // ----------- MAIN FUNCTION -----------
-async function postLibraryMessagesToForum(client) {
-    const { library, bestBooks, errors } = getChannels(client);
+async function postLibraryMessagesToForum(client, guildId) {
+    const { library, bestBooks, errors } = await getChannels(client, guildId);
     if (errors.length) {
         errors.forEach(e => console.log("[ERROR]", e));
         return;
     }
 
-    const processedBooks = loadProcessedBooks();
+    const processedBooks = loadProcessedBooks(guildId);
     let messages;
 
     if (Object.keys(processedBooks).length === 0) {
-        console.log("[INFO] JSON empty. Scanning entire library channel...");
+        console.log(`[INFO] JSON empty for server ${guildId}. Scanning entire library channel...`);
         messages = await fetchAllMessages(library);
     } else {
-        console.log("[INFO] Fetching latest messages...");
+        console.log(`[INFO] Fetching latest messages for server ${guildId}...`);
         messages = await fetchRecentMessages(library, MESSAGE_FETCH_LIMIT);
-        messages.push(...Object.values(processedBooks))
+        messages.push(...Object.values(processedBooks));
     }
 
     // --- Process new messages ---
@@ -183,8 +204,8 @@ async function postLibraryMessagesToForum(client) {
         const { title, description } = extractFields(msg);
         if (!title) continue;
 
-        const url = msg.url;
-        const reactions = getCheckmarkCount(msg);
+        const url = msg.url || msg.id; // fallback if object from JSON
+        const reactions = await getCheckmarkCount(msg);
 
         if (!processedBooks[url]) {
             processedBooks[url] = { title, description, reactions, url, attachments: [] };
@@ -195,38 +216,44 @@ async function postLibraryMessagesToForum(client) {
         // Fetch attachments if not already saved
         if (!processedBooks[url].attachments || processedBooks[url].attachments.length === 0) {
             const attachments = await getAttachments(msg);
-            processedBooks[url].attachments = attachments.map(a => ({ name: a.name, buffer: a.attachment.toString("base64") }));
+            processedBooks[url].attachments = attachments.map(a => ({
+                name: a.name,
+                buffer: a.attachment.toString("base64")
+            }));
         }
     }
 
     // --- Update reactions for all books from JSON ---
     for (const url of Object.keys(processedBooks)) {
         try {
-            const msg = await library.messages.fetch(url);
+            const messageId = url.split("/").pop(); // extract message ID from URL
+            const msg = await library.messages.fetch(messageId, { cache: false });
             if (msg) {
-                processedBooks[url].reactions = getCheckmarkCount(msg);
+                processedBooks[url].reactions = await getCheckmarkCount(msg);
             }
         } catch (err) {
             console.log(`[WARN] Could not fetch message for ${url}:`, err.message);
         }
     }
 
-// --- Sort by reactions descending, then reverse for posting ---
-const booksArray = Object.values(processedBooks)
-    .sort((a, b) => b.reactions - a.reactions);
+    // --- Sort by reactions descending ---
+    const booksArray = Object.values(processedBooks)
+        .sort((a, b) => b.reactions - a.reactions);
 
     // --- Clear forum threads ---
     await clearForumThreads(bestBooks);
 
     // --- Post all books to forum ---
     for (const book of booksArray) {
-        const files = book.attachments.map(a => new AttachmentBuilder(Buffer.from(a.buffer, "base64"), { name: a.name }));
+        const files = book.attachments.map(a =>
+            new AttachmentBuilder(Buffer.from(a.buffer, "base64"), { name: a.name })
+        );
         const content = `${book.description}\n\n${book.url}`;
         await postMessageToForum(bestBooks, book.title, content, files);
     }
 
-    saveProcessedBooks(processedBooks);
-    console.log(`[INFO] Posted ${booksArray.length} books to the forum.`);
+    saveProcessedBooks(guildId, processedBooks);
+    console.log(`[INFO] Posted ${booksArray.length} books to the forum for server ${guildId}.`);
 }
 
 module.exports = { postLibraryMessagesToForum };

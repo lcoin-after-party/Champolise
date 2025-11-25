@@ -1,22 +1,28 @@
-// load environment variables
-require("dotenv").config();
-
 const {
     ForumChannel,
     TextChannel,
     AttachmentBuilder
 } = require("discord.js");
 
-const SUGGESTION_CHANNEL_ID = process.env.SUGGESTION_CHANNEL_ID;
-const PRIORITIES_SUGGESTION_FORUM_ID = process.env.PRIORITIES_SUGGESTION_FORUM_ID;
+const { getServerConfig } = require("../databases/servers");
+
 const MESSAGE_FETCH_LIMIT = 50;
 const WHITE_CHECK = "✅";
 const MINIMUM_REACTIONS = 0;
 
+function getSuggestionChannels(client, guildId) {
+    const config = getServerConfig(guildId);
+    
+    if (!config) {
+        return { 
+            suggestion: null, 
+            priorities: null, 
+            errors: [`Server ${guildId} not configured`] 
+        };
+    }
 
-function getSuggestionChannels(client) {
-    const suggestion = client.channels.cache.get(SUGGESTION_CHANNEL_ID);
-    const priorities = client.channels.cache.get(PRIORITIES_SUGGESTION_FORUM_ID);
+    const suggestion = client.channels.cache.get(config.SUGGESTION_CHANNEL_ID);
+    const priorities = client.channels.cache.get(config.PRIORITIES_SUGGESTION_FORUM_ID);
 
     const errors = [];
 
@@ -28,7 +34,6 @@ function getSuggestionChannels(client) {
 
     return { suggestion, priorities, errors };
 }
-
 
 async function clearForumThreads(forum) {
     console.log("[INFO] Clearing priorities forum...");
@@ -51,12 +56,10 @@ async function clearForumThreads(forum) {
     console.log(`[INFO] Deleted ${deleted} threads.`);
 }
 
-
 function getCheckmarkCount(msg) {
     const r = msg.reactions.cache.find(r => r.emoji.name === WHITE_CHECK);
     return r ? r.count : 0;
 }
-
 
 async function fetchSuggestions(channel, limit) {
     const msgs = await channel.messages.fetch({ limit });
@@ -94,7 +97,6 @@ function extractSuggestionFields(msg) {
     return null;
 }
 
-
 async function getAttachments(msg) {
     const files = [];
 
@@ -112,7 +114,6 @@ async function getAttachments(msg) {
 
     return files;
 }
-
 
 async function postPriorityThread(forum, title, content, files) {
     try {
@@ -133,8 +134,8 @@ async function postPriorityThread(forum, title, content, files) {
 // -----------------------------
 // MAIN FUNCTION
 // -----------------------------
-async function postSuggestionsToPriorities(client, limit = MESSAGE_FETCH_LIMIT) {
-    const { suggestion, priorities, errors } = getSuggestionChannels(client);
+async function postSuggestionsToPriorities(client, guildId, limit = MESSAGE_FETCH_LIMIT) {
+    const { suggestion, priorities, errors } = getSuggestionChannels(client, guildId);
 
     if (errors.length) {
         errors.forEach(e => console.log("[ERROR]", e));
@@ -166,7 +167,7 @@ async function postSuggestionsToPriorities(client, limit = MESSAGE_FETCH_LIMIT) 
         }
     }
 
-    console.log(`[INFO] Posted ${posted} suggestions.`);
+    console.log(`[INFO] Posted ${posted} suggestions for server ${guildId}.`);
 }
 
 module.exports = { postSuggestionsToPriorities };
