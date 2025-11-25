@@ -299,8 +299,16 @@ async function processMessages(messages, processedBooks, library) {
         const reactions = await getCheckmarkCount(msg);
 
         if (!processedBooks[url]) {
-            processedBooks[url] = { title, description, reactions, url, attachments: [] };
-        } else {
+            processedBooks[url] = {
+                title,
+                description,
+                reactions,
+                url,
+                attachments: [],
+                timestamp: msg.createdTimestamp // <-- store original timestamp
+            };
+        }
+        else {
             processedBooks[url].reactions = reactions;
         }
 
@@ -346,13 +354,21 @@ async function updateReactionsFromLibrary(processedBooks, library) {
 }
 
 /**
- * Sorts processedBooks by reactions in descending order.
+ * Sorts processedBooks by reactions descending.
+ * If reactions are equal, sorts by message timestamp (older first).
  * @param {object} processedBooks
  * @returns {object[]}
  */
 function sortBooksByReactions(processedBooks) {
-    return Object.values(processedBooks).sort((a, b) => b.reactions - a.reactions);
+    return Object.values(processedBooks).sort((a, b) => {
+        // Primary sort: reactions descending
+        if (a.reactions !== b.reactions) return a.reactions - b.reactions;
+
+        // Secondary sort: timestamp ascending (older first)
+        return b.timestamp - a.timestamp;
+    });
 }
+
 
 /**
  * Posts books to a forum channel.
