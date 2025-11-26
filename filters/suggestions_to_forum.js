@@ -9,7 +9,7 @@ const { getServerConfig } = require("../databases/servers");
 
 const MESSAGE_FETCH_LIMIT = 50;
 const WHITE_CHECK = "✅";
-const MINIMUM_REACTIONS = 0;
+const MINIMUM_REACTIONS = 1;
 
 /* ---------------------------------------------------------
    SAFE CHANNEL FETCHER
