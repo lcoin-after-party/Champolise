@@ -106,7 +106,7 @@ client.on("messageCreate", async (message) => {
 
 
     // Déclaration de guerre contre IBN KHALDON
-    if (message.author.id === "1418154490942586910" && message.guild.id == "1424028933128585228") {
+    if (message.author.id === "1418154490942586910" && message.guild.id == "1424028933128585228") { // l'Coin
         if (Math.floor(Math.random() * 3) == 2) {
             await DiscordWarI(message);
         }
@@ -123,6 +123,7 @@ client.on("messageCreate", async (message) => {
        this section contains things that related to bot commands
        ======================================================================== */
 
+if(message.guild.id == "1440447165737730152"){    // comands are allowed only in test server
     // command: sync library
     // scans the library channel, checks for proper message format,
     // counts reacts with the emoji "✅",
@@ -152,7 +153,7 @@ client.on("messageCreate", async (message) => {
         await message.delete().catch(() => { });
         await postSuggestionsToPriorities(client, guildId);
     }
-
+}
     // 9lat ma ydar 
     if (cmd === "bobiz") {
         await handleBobiz(message);
