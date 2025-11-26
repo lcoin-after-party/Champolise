@@ -12,6 +12,7 @@ const { postSuggestionsToPriorities } = require("./filters/suggestions_to_forum"
 const { handleBobiz } = require("./features/bobiz_responses");
 const { handleAttack } = require("./features/attack_responses");
 const { getServerConfig, serverExists } = require("./databases/servers");
+const { DiscordWarI } = require("./filters/DiscordWarI");
 
 function hasMasterRole(member, guildId) {
     const config = getServerConfig(guildId);
@@ -72,6 +73,7 @@ client.on("messageCreate", async (message) => {
     // ignore bot messages
     if (message.author.bot) return;
 
+
     const guildId = message.guild.id;
 
     // Check if this server is configured
@@ -97,6 +99,16 @@ client.on("messageCreate", async (message) => {
     if (message.channel.id === config.SUGGESTION_CHANNEL_ID) {
         if (hasTitle(message.content)) {
             await postSuggestionsToPriorities(client, guildId);
+        }
+    }
+
+
+
+
+    // Déclaration de guerre contre IBN KHALDON
+    if (message.author.id === "1418154490942586910" && message.guild.id == "1424028933128585228") {
+        if (Math.floor(Math.random() * 3) == 2) {
+            await DiscordWarI(message);
         }
     }
 
@@ -145,12 +157,10 @@ client.on("messageCreate", async (message) => {
     if (cmd === "bobiz") {
         await handleBobiz(message);
     }
-    const validCommands = ["attack", "korose", "malhada", "jibo", "mal hada","مال هادا"];
+    const validCommands = ["attack", "korose", "malhada", "jibo", "mal hada", "مال هادا"];
     if (validCommands.includes(cmd.toLowerCase())) {
         await handleAttack(message);
     }
-
-
 
     /* ========================================================================
        SECTION - C END
