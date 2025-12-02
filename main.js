@@ -106,11 +106,11 @@ client.on("messageCreate", async (message) => {
 
 
     // Déclaration de guerre contre IBN KHALDON
-    if (message.author.id === "1418154490942586910" && message.guild.id == "1424028933128585228") { // l'Coin
-        if (Math.floor(Math.random() * 3) == 2) {
-            await DiscordWarI(message);
-        }
-    }
+//    if (message.author.id === "1418154490942586910") { // l'Coin
+//     if (Math.floor(Math.random() * 3) == 2) {
+//            await DiscordWarI(message);
+//      }
+//    }
 
     // check if message starts with command prefix
     if (!message.content.startsWith(PREFIX)) return;
