@@ -4,13 +4,53 @@ listOfConversations
 should be 
 {"channedID" : 
     {
-      manager : "",
+      manager : {username : "" , userId : ""},
       list :[
             {username : "" , userId : ""}
             ]  
     }   
 }
 */
+/**
+ * Shows the list of intervenants in a specific channel
+ * @param {string} channelId - ID of the channel to send the message
+ * @param {boolean} mention - whether to mention the users
+ */
+function showList(message, mention = false) {
+
+    const channel = message.channel;
+    const channelId = message.channel.id;
+    const channelData = listOfConversations[channelId];
+
+
+    if (!channelData) {
+        console.log("Channel data not found!");
+        return;
+    }
+    if (channelData.list.length == 0) {
+        channel.send("Liste khawya ....")
+        return
+    }
+    // Create the message content
+    let messageContent = `**Liste des intervenants**\nManager: ${channelData.manager.username}\n\n`;
+    messageContent += channelData.list.map(user =>
+        user.username
+    ).join("\n");
+    if (mention) {
+        console.log(mention);
+        messageContent += ` \n nobtk a <@${channelData.list[0].userId}>`;
+    }
+    // Fetch the channel and send the message
+    if (!channel) {
+        console.log("Channel not found in cache!");
+        return;
+    }
+
+    channel.send(messageContent)
+        .then(() => console.log("Liste des intervenants sent successfully!"))
+        .catch(console.error);
+}
+
 
 async function ListeOfContributors(message) {
     // Respond to the user when bot is mentioned
@@ -20,7 +60,7 @@ async function ListeOfContributors(message) {
         message.reply("ana hna");
         listOfConversations[message.channel.id] =
         {
-            manager: message.author.id,
+            manager: { username: message.author.username, userId: message.author.id },
             list: []
         }
 
@@ -41,7 +81,11 @@ async function addContributorToList(message, { channelId, username, userId }) {
     // of the specefic channel
     listOfConversations[channelId].list.push({ username, userId })
     console.log(listOfConversations[channelId].list);
-    message.reply("safi rak tzaditi f la liste , tsna nobtek")
+    showList(message)
+    message.reply("safi rak tzaditi f la liste , tsna nobtek").then(botMsg => {
+            setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
+        });
+
 }
 
 // remove from contributors after that contribution is done 
@@ -54,6 +98,7 @@ async function removeContributorFromList(message, { channelId, userId }) {
         message.reply("9te3 llah ydir lkhir").then(botMsg => {
             setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
         });
+        showList(message, true)
     }
     else
         message.reply("machi nobtek hadi").then(botMsg => {
@@ -61,4 +106,4 @@ async function removeContributorFromList(message, { channelId, userId }) {
         });
 
 }
-module.exports = { ListeOfContributors, addContributorToList, removeContributorFromList }
+module.exports = { ListeOfContributors, addContributorToList, removeContributorFromList, listOfConversations }
