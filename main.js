@@ -13,7 +13,7 @@ const { handleBobiz } = require("./features/bobiz_responses");
 const { handleAttack } = require("./features/attack_responses");
 const { getServerConfig, serverExists } = require("./databases/servers");
 const { DiscordWarI } = require("./filters/DiscordWarI");
-const { ListeOfContributors, addContributorToList } = require("./features/listOfContributors");
+const { ListeOfContributors, addContributorToList, removeContributorFromList } = require("./features/listOfContributors");
 
 function hasMasterRole(member, guildId) {
     const config = getServerConfig(guildId);
@@ -125,7 +125,7 @@ client.on("messageCreate", async (message) => {
         ListeOfContributors(message)
         listOfChannelsTheBotIn.add(message.channel.id)
     }
-    console.log(listOfChannelsTheBotIn);
+    // console.log(listOfChannelsTheBotIn);
     if (listOfChannelsTheBotIn.has(message.channel.id)) 
         {
             if( message.content.startsWith("✋")){
@@ -139,7 +139,16 @@ client.on("messageCreate", async (message) => {
                 )
                 
             }
+            if( message.content.startsWith("👍")){
 
+                removeContributorFromList(message,
+                    {
+                        channelId: message.channel.id,
+                        userId: message.author.id
+                    }
+                )
+                
+            }
     }
 
 
