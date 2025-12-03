@@ -13,7 +13,7 @@ const { handleBobiz } = require("./features/bobiz_responses");
 const { handleAttack } = require("./features/attack_responses");
 const { getServerConfig, serverExists } = require("./databases/servers");
 const { DiscordWarI } = require("./filters/DiscordWarI");
-const { ListeOfContributors, addContributorToList, removeContributorFromList } = require("./features/listOfContributors");
+const { startListOfContributors, addContributorToList, removeContributorFromList } = require("./features/listOfContributors");
 
 function hasMasterRole(member, guildId) {
     const config = getServerConfig(guildId);
@@ -117,38 +117,36 @@ client.on("messageCreate", async (message) => {
     // List of contributors
     // the bot must be mentionned first to focus on the conversation
 
-    if (
-        message.mentions.has(client.user) // mention the bot
-        &&
-        message.content.toLowerCase().includes('list') // find the word "list"
-    ) {
-        ListeOfContributors(message)
-        listOfChannelsTheBotIn.add(message.channel.id)
+    if (message.mentions.has(client.user)) {// mention the bot
+        if (message.content.toLowerCase().includes('list')){ // find the word "list" to start new list
+            startListOfContributors(message)
+            listOfChannelsTheBotIn.add(message.channel.id)
+        }
+
     }
     // console.log(listOfChannelsTheBotIn);
-    if (listOfChannelsTheBotIn.has(message.channel.id)) 
-        {
-            if( message.content.startsWith("✋")){
+    if (listOfChannelsTheBotIn.has(message.channel.id)) {
+        if (message.content.startsWith("✋")) {
 
-                addContributorToList(message,
-                    {
-                        channelId: message.channel.id,
-                        username: message.author.username,
-                        userId: message.author.id
-                    }
-                )
-                
-            }
-            if( message.content.startsWith("👍")){
+            addContributorToList(message,
+                {
+                    channelId: message.channel.id,
+                    username: message.author.username,
+                    userId: message.author.id
+                }
+            )
 
-                removeContributorFromList(message,
-                    {
-                        channelId: message.channel.id,
-                        userId: message.author.id
-                    }
-                )
-                
-            }
+        }
+        if (message.content.startsWith("👍")) {
+
+            removeContributorFromList(message,
+                {
+                    channelId: message.channel.id,
+                    userId: message.author.id
+                }
+            )
+
+        }
     }
 
 

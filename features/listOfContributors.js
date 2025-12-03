@@ -52,7 +52,7 @@ function showList(message, mention = false) {
 }
 
 
-async function ListeOfContributors(message) {
+async function startListOfContributors(message) {
     // Respond to the user when bot is mentioned
     if (listOfConversations[message.channel.id]) {
         message.reply("deja kayna liste");
@@ -106,4 +106,4 @@ async function removeContributorFromList(message, { channelId, userId }) {
         });
 
 }
-module.exports = { ListeOfContributors, addContributorToList, removeContributorFromList, listOfConversations }
+module.exports = { startListOfContributors, addContributorToList, removeContributorFromList, listOfConversations }

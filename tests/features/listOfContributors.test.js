@@ -1,6 +1,6 @@
 
 // __tests__/listOfContributors.test.js
-const { ListeOfContributors, addContributorToList, removeContributorFromList } = require("../../features/listOfContributors")
+const { startListOfContributors, addContributorToList, removeContributorFromList } = require("../../features/listOfContributors")
 
 // Mock the Discord message and channel
 function createMockMessage(overrides = {}) {
@@ -23,7 +23,7 @@ function createMockMessage(overrides = {}) {
     };
 }
 
-describe("ListeOfContributors Bot Functions", () => {
+describe("startListOfContributors Bot Functions", () => {
     beforeEach(() => {
         // reset listOfConversations between tests
         const listOfContributorsModule = require("../../features/listOfContributors");
@@ -33,11 +33,11 @@ describe("ListeOfContributors Bot Functions", () => {
         jest.clearAllMocks();
     });
 
-    describe("ListeOfContributors", () => {
+    describe("startListOfContributors", () => {
         test("should create new list if not exists and reply", async () => {
             const message = createMockMessage({ mentionBot: true, content: "list" });
 
-            await ListeOfContributors(message);
+            await startListOfContributors(message);
 
             const listOfContributorsModule = require("../../features/listOfContributors");
             expect(listOfContributorsModule.listOfConversations[message.channel.id]).toBeDefined();
@@ -48,9 +48,9 @@ describe("ListeOfContributors Bot Functions", () => {
             const message = createMockMessage({ mentionBot: true, content: "list" });
 
             // first call
-            await ListeOfContributors(message);
+            await startListOfContributors(message);
             // second call
-            await ListeOfContributors(message);
+            await startListOfContributors(message);
 
             expect(message.reply).toHaveBeenLastCalledWith("deja kayna liste");
         });
@@ -62,7 +62,7 @@ describe("ListeOfContributors Bot Functions", () => {
             const listOfContributorsModule = require("../../features/listOfContributors");
 
             // create channel first
-            await ListeOfContributors(message);
+            await startListOfContributors(message);
 
             await addContributorToList(message, {
                 channelId: "channel1",
@@ -81,7 +81,7 @@ describe("ListeOfContributors Bot Functions", () => {
             const message = createMockMessage({ channelId: "channel1", userId: "user1", username: "Alice" });
             const listOfContributorsModule = require("../../features/listOfContributors");
 
-            await ListeOfContributors(message);
+            await startListOfContributors(message);
             await addContributorToList(message, {
                 channelId: "channel1",
                 username: "Alice",
@@ -103,7 +103,7 @@ describe("ListeOfContributors Bot Functions", () => {
             const message = createMockMessage({ channelId: "channel1", userId: "user2", username: "Bob" });
             const listOfContributorsModule = require("../../features/listOfContributors");
 
-            await ListeOfContributors(message);
+            await startListOfContributors(message);
             // add a different contributor first
             await addContributorToList(message, {
                 channelId: "channel1",
