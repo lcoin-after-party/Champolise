@@ -28,7 +28,9 @@ function showList(message, mention = false) {
         return;
     }
     if (channelData.list.length == 0) {
-        channel.send("Liste khawya ....")
+        channel.send("Liste khawya ....").then(botMsg => {
+            setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
+        });
         return
     }
     // Create the message content
@@ -64,6 +66,20 @@ async function startListOfContributors(message) {
             list: []
         }
 
+    }
+}
+async function endListOfContributors(message) {
+    console.log({author : message.author.id });
+    console.log({manager : listOfConversations[message.channel.id].manager.userId});
+    
+    if (listOfConversations[message.channel.id] && listOfConversations[message.channel.id].manager.userId == message.author.id) {
+        showList(message)
+        message.reply("Sf la liste t7ydat").then(botMsg => {
+            setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
+        });
+        message.channel.send("Bye everyone")
+    } else {
+        message.reply("nta machi manager");
     }
 }
 // Adding contributions
@@ -106,4 +122,4 @@ async function removeContributorFromList(message, { channelId, userId }) {
         });
 
 }
-module.exports = { startListOfContributors, addContributorToList, removeContributorFromList, listOfConversations }
+module.exports = { startListOfContributors,endListOfContributors, addContributorToList, removeContributorFromList, listOfConversations }

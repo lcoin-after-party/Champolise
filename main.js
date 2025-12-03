@@ -13,7 +13,7 @@ const { handleBobiz } = require("./features/bobiz_responses");
 const { handleAttack } = require("./features/attack_responses");
 const { getServerConfig, serverExists } = require("./databases/servers");
 const { DiscordWarI } = require("./filters/DiscordWarI");
-const { startListOfContributors, addContributorToList, removeContributorFromList } = require("./features/listOfContributors");
+const { startListOfContributors, addContributorToList, removeContributorFromList, endListOfContributors } = require("./features/listOfContributors");
 
 function hasMasterRole(member, guildId) {
     const config = getServerConfig(guildId);
@@ -118,9 +118,13 @@ client.on("messageCreate", async (message) => {
     // the bot must be mentionned first to focus on the conversation
 
     if (message.mentions.has(client.user)) {// mention the bot
-        if (message.content.toLowerCase().includes('list')){ // find the word "list" to start new list
+        if (message.content.toLowerCase().includes('aji')){ // find the word "list" to start new list
             startListOfContributors(message)
             listOfChannelsTheBotIn.add(message.channel.id)
+        }
+        if (message.content.toLowerCase().includes('bye')){ // find the word "bye" to end current list
+            const hasEnded = endListOfContributors(message)
+            if(hasEnded) listOfChannelsTheBotIn.delete(message.channel.id)
         }
 
     }
