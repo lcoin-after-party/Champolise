@@ -52,6 +52,12 @@ const PREFIX = "--";
    this section contains things that happen on the server side
    ======================================================================== */
 
+   // the List of contributors
+    const triggerWordsOfList = ['list', 'لائحة'];
+    const listOfConversationManagers = {} // should be {"channedID" : "managerID "}
+                                // to keep track of different lists
+
+
 // bot ready event
 // displays the message "Oh shit, here we go again" in the console
 // used as an indicator that the bot is running
@@ -103,27 +109,43 @@ client.on("messageCreate", async (message) => {
     }
 
 
+    // List of contributors
+    // the bot must be mentionned first to focus on the conversation
+
+    if (
+        message.mentions.has(client.user) // mention the bot
+        &&
+        triggerWordsOfList.some(word => message.content.toLowerCase().includes(word)) // find the word "list"
+    ) {
+        // Respond to the user when bot is mentioned
+        if(listOfConversationManagers[message.channel.id]){
+            message.reply("deja kayna liste");
+        }else{
+            message.reply("ana hna");
+            listOfConversationManagers[message.channel.id] = message.author.id
+        }
+    }
 
 
-    // Déclaration de guerre contre IBN KHALDON
+// Déclaration de guerre contre IBN KHALDON
 //    if (message.author.id === "1418154490942586910") { // l'Coin
 //     if (Math.floor(Math.random() * 3) == 2) {
 //            await DiscordWarI(message);
 //      }
 //    }
 
-    // check if message starts with command prefix
-    if (!message.content.startsWith(PREFIX)) return;
+// check if message starts with command prefix
+if (!message.content.startsWith(PREFIX)) return;
 
-    // extract the command name
-    const [cmd] = message.content.slice(PREFIX.length).split(" ");
+// extract the command name
+const [cmd] = message.content.slice(PREFIX.length).split(" ");
 
-    /* ========================================================================
-       SECTION - C START
-       this section contains things that related to bot commands
-       ======================================================================== */
+/* ========================================================================
+   SECTION - C START
+   this section contains things that related to bot commands
+   ======================================================================== */
 
-if(message.guild.id == "1440447165737730152"){    // comands are allowed only in test server
+if (message.guild.id == "1440447165737730152") {    // comands are allowed only in test server
     // command: sync library
     // scans the library channel, checks for proper message format,
     // counts reacts with the emoji "✅",
@@ -154,14 +176,14 @@ if(message.guild.id == "1440447165737730152"){    // comands are allowed only in
         await postSuggestionsToPriorities(client, guildId);
     }
 }
-    // 9lat ma ydar 
-    if (cmd === "bobiz") {
-        await handleBobiz(message);
-    }
-    const validCommands = ["attack", "korose", "malhada", "jibo", "mal hada", "مال هادا"];
-    if (validCommands.includes(cmd.toLowerCase())) {
-        await handleAttack(message);
-    }
+// 9lat ma ydar 
+if (cmd === "bobiz") {
+    await handleBobiz(message);
+}
+const validCommands = ["attack", "korose", "malhada", "jibo", "mal hada", "مال هادا"];
+if (validCommands.includes(cmd.toLowerCase())) {
+    await handleAttack(message);
+}
 
     /* ========================================================================
        SECTION - C END
