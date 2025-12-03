@@ -13,6 +13,7 @@ const { handleBobiz } = require("./features/bobiz_responses");
 const { handleAttack } = require("./features/attack_responses");
 const { getServerConfig, serverExists } = require("./databases/servers");
 const { DiscordWarI } = require("./filters/DiscordWarI");
+const { ListeOfContributors, addContributorToList } = require("./features/listOfContributors");
 
 function hasMasterRole(member, guildId) {
     const config = getServerConfig(guildId);
@@ -47,15 +48,19 @@ const client = new Client({
 // prefix for bot commands
 const PREFIX = "--";
 
+// channels that the bot follows
+// to make list of contributors
+const listOfChannelsTheBotIn = new Set()
+
+
 /* ========================================================================
    SECTION - A START
    this section contains things that happen on the server side
    ======================================================================== */
 
-   // the List of contributors
-    const triggerWordsOfList = ['list', 'لائحة'];
-    const listOfConversationManagers = {} // should be {"channedID" : "managerID "}
-                                // to keep track of different lists
+// the List of contributors
+
+// to keep track of different lists
 
 
 // bot ready event
@@ -115,75 +120,86 @@ client.on("messageCreate", async (message) => {
     if (
         message.mentions.has(client.user) // mention the bot
         &&
-        triggerWordsOfList.some(word => message.content.toLowerCase().includes(word)) // find the word "list"
+        message.content.toLowerCase().includes('list') // find the word "list"
     ) {
-        // Respond to the user when bot is mentioned
-        if(listOfConversationManagers[message.channel.id]){
-            message.reply("deja kayna liste");
-        }else{
-            message.reply("ana hna");
-            listOfConversationManagers[message.channel.id] = message.author.id
-        }
+        ListeOfContributors(message)
+        listOfChannelsTheBotIn.add(message.channel.id)
+    }
+    console.log(listOfChannelsTheBotIn);
+    if (listOfChannelsTheBotIn.has(message.channel.id)) 
+        {
+            if( message.content.startsWith("✋")){
+
+                addContributorToList(message,
+                    {
+                        channelId: message.channel.id,
+                        username: message.author.username,
+                        userId: message.author.id
+                    }
+                )
+                
+            }
+
     }
 
 
-// Déclaration de guerre contre IBN KHALDON
-//    if (message.author.id === "1418154490942586910") { // l'Coin
-//     if (Math.floor(Math.random() * 3) == 2) {
-//            await DiscordWarI(message);
-//      }
-//    }
+    // Déclaration de guerre contre IBN KHALDON
+    //    if (message.author.id === "1418154490942586910") { // l'Coin
+    //     if (Math.floor(Math.random() * 3) == 2) {
+    //            await DiscordWarI(message);
+    //      }
+    //    }
 
-// check if message starts with command prefix
-if (!message.content.startsWith(PREFIX)) return;
+    // check if message starts with command prefix
+    if (!message.content.startsWith(PREFIX)) return;
 
-// extract the command name
-const [cmd] = message.content.slice(PREFIX.length).split(" ");
+    // extract the command name
+    const [cmd] = message.content.slice(PREFIX.length).split(" ");
 
-/* ========================================================================
-   SECTION - C START
-   this section contains things that related to bot commands
-   ======================================================================== */
+    /* ========================================================================
+       SECTION - C START
+       this section contains things that related to bot commands
+       ======================================================================== */
 
-if (message.guild.id == "1440447165737730152") {    // comands are allowed only in test server
-    // command: sync library
-    // scans the library channel, checks for proper message format,
-    // counts reacts with the emoji "✅",
-    // then posts messages into the library forum sorted by reaction count
-    if (cmd === "sync_lib") {
+    if (message.guild.id == "1440447165737730152") {    // comands are allowed only in test server
+        // command: sync library
+        // scans the library channel, checks for proper message format,
+        // counts reacts with the emoji "✅",
+        // then posts messages into the library forum sorted by reaction count
+        if (cmd === "sync_lib") {
 
-        // check master role
-        if (!hasMasterRole(message.member, guildId)) {
-            return message.reply("knsme3 4ir ll3esas , 7ta tched lgrade w sowel fya")
+            // check master role
+            if (!hasMasterRole(message.member, guildId)) {
+                return message.reply("knsme3 4ir ll3esas , 7ta tched lgrade w sowel fya")
+            }
+
+            await message.delete().catch(() => { });
+            await postLibraryMessagesToForum(client, guildId);
         }
 
-        await message.delete().catch(() => { });
-        await postLibraryMessagesToForum(client, guildId);
-    }
+        // command: sync suggestions
+        // scans suggestions channel, looks for messages with a Title field,
+        // counts reacts with "✅", collects images,
+        // then posts them into the priorities forum sorted by reaction count
+        if (cmd === "sync_sugg") {
 
-    // command: sync suggestions
-    // scans suggestions channel, looks for messages with a Title field,
-    // counts reacts with "✅", collects images,
-    // then posts them into the priorities forum sorted by reaction count
-    if (cmd === "sync_sugg") {
+            // check master role
+            if (!hasMasterRole(message.member, guildId)) {
+                return message.reply("knsme3 4ir ll3esas , 7ta tched lgrade w sowel fya")
+            }
 
-        // check master role
-        if (!hasMasterRole(message.member, guildId)) {
-            return message.reply("knsme3 4ir ll3esas , 7ta tched lgrade w sowel fya")
+            await message.delete().catch(() => { });
+            await postSuggestionsToPriorities(client, guildId);
         }
-
-        await message.delete().catch(() => { });
-        await postSuggestionsToPriorities(client, guildId);
     }
-}
-// 9lat ma ydar 
-if (cmd === "bobiz") {
-    await handleBobiz(message);
-}
-const validCommands = ["attack", "korose", "malhada", "jibo", "mal hada", "مال هادا"];
-if (validCommands.includes(cmd.toLowerCase())) {
-    await handleAttack(message);
-}
+    // 9lat ma ydar 
+    if (cmd === "bobiz") {
+        await handleBobiz(message);
+    }
+    const validCommands = ["attack", "korose", "malhada", "jibo", "mal hada", "مال هادا"];
+    if (validCommands.includes(cmd.toLowerCase())) {
+        await handleAttack(message);
+    }
 
     /* ========================================================================
        SECTION - C END
