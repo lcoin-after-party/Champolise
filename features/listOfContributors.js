@@ -78,8 +78,10 @@ async function endListOfContributors(message) {
             setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
         });
         message.channel.send("Bye everyone")
+        return true
     } else {
         message.reply("nta machi manager");
+        return false
     }
 }
 // Adding contributions
