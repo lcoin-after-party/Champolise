@@ -116,22 +116,23 @@ client.on("messageCreate", async (message) => {
 
     // List of contributors
     // the bot must be mentionned first to focus on the conversation
-
     if (message.mentions.has(client.user)) {// mention the bot
         if (message.content.toLowerCase().includes('aji')){ // find the word "list" to start new list
             startListOfContributors(message)
             listOfChannelsTheBotIn.add(message.channel.id)
         }
+    // after the bot is no longer needed to guard a list
+    // you can tell it to leave the conversation
         if (message.content.toLowerCase().includes('bye')){ // find the word "bye" to end current list
             const hasEnded = endListOfContributors(message)
             if(hasEnded) listOfChannelsTheBotIn.delete(message.channel.id)
         }
 
     }
-    // console.log(listOfChannelsTheBotIn);
+    // for a membre to add his name to the list 
+    // he should send a rise hand emoji
     if (listOfChannelsTheBotIn.has(message.channel.id)) {
-        if (message.content.startsWith("✋")) {
-
+        if ((/^(✋|🤚|🖐)(?:[\u{1F3FB}-\u{1F3FF}])?/u).test(message.content)) {
             addContributorToList(message,
                 {
                     channelId: message.channel.id,
@@ -141,8 +142,9 @@ client.on("messageCreate", async (message) => {
             )
 
         }
-        if (message.content.startsWith("👍")) {
-
+    // for a member to remove his name to the list
+    // he should send like emoji to end his contribution
+        if ((/^(👍|👎)(?:[\u{1F3FB}-\u{1F3FF}])?/u).test(message.content)) {
             removeContributorFromList(message,
                 {
                     channelId: message.channel.id,
@@ -152,6 +154,7 @@ client.on("messageCreate", async (message) => {
 
         }
     }
+
 
 
     // Déclaration de guerre contre IBN KHALDON
