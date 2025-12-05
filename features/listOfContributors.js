@@ -69,9 +69,6 @@ async function startListOfContributors(message) {
     }
 }
 async function endListOfContributors(message) {
-    console.log({author : message.author.id });
-    console.log({manager : listOfConversations[message.channel.id].manager.userId});
-    
     if (listOfConversations[message.channel.id] && listOfConversations[message.channel.id].manager.userId == message.author.id) {
         showList(message)
         message.reply("Sf la liste t7ydat").then(botMsg => {
@@ -95,14 +92,27 @@ async function addContributorToList(message, { channelId, username, userId }) {
         console.error("channel id is not in list of channels")
         return;
     }
+
+    // the manager could add contributors
+    const manager = listOfConversations[channelId].manager
+    if (message.author.username == manager.username) {
+        if (message.mentions.users.first()) {
+            const contributor = message.mentions.users.first()
+            listOfConversations[channelId].list.push({ username: contributor.username, userId: contributor.id })
+            message.reply(`${contributor} rak tzaditi f la liste , tsna nobtek`).then(botMsg => {
+                setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
+            });
+            return;
+        }
+    }
     // add the user to list of contributors 
     // of the specefic channel
     listOfConversations[channelId].list.push({ username, userId })
     console.log(listOfConversations[channelId].list);
     showList(message)
     message.reply("safi rak tzaditi f la liste , tsna nobtek").then(botMsg => {
-            setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
-        });
+        setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
+    });
 
 }
 
@@ -124,4 +134,4 @@ async function removeContributorFromList(message, { channelId, userId }) {
         });
 
 }
-module.exports = { startListOfContributors,endListOfContributors, addContributorToList, removeContributorFromList, listOfConversations }
+module.exports = { startListOfContributors, endListOfContributors, addContributorToList, removeContributorFromList, listOfConversations }
