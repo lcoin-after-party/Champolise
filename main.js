@@ -123,7 +123,7 @@ client.on("messageCreate", async (message) => {
         }
     // after the bot is no longer needed to guard a list
     // you can tell it to leave the conversation
-        if (message.content.toLowerCase().includes('bye')){ // find the word "bye" to end current list
+        if (message.content.toLowerCase().includes('khoch')){ // find the word "khoch" to end current list
             const hasEnded = endListOfContributors(message)
             if(hasEnded) listOfChannelsTheBotIn.delete(message.channel.id)
         }
@@ -137,6 +137,7 @@ client.on("messageCreate", async (message) => {
                 {
                     channelId: message.channel.id,
                     username: message.author.username,
+                    globalName: message.author.globalName,
                     userId: message.author.id
                 }
             )
@@ -210,7 +211,7 @@ client.on("messageCreate", async (message) => {
     if (cmd === "bobiz") {
         await handleBobiz(message);
     }
-    const validCommands = ["attack", "korose", "malhada", "jibo", "mal hada", "مال هادا"];
+    const validCommands = ["attack", "korose", "malhada", "jibo", "mal hada", "مال هادا" , "ewa_lih"];
     if (validCommands.includes(cmd.toLowerCase())) {
         await handleAttack(message);
     }

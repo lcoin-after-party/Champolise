@@ -4,9 +4,9 @@ listOfConversations
 should be 
 {"channedID" : 
     {
-      manager : {username : "" , userId : ""},
+      manager : {username : "" , globalName : "" , userId : ""}, // smito L-bâshâ
       list :[
-            {username : "" , userId : ""}
+            {username : "" , userId : "", globalName : ""}
             ]  
     }   
 }
@@ -34,13 +34,13 @@ function showList(message, mention = false) {
         return
     }
     // Create the message content
-    let messageContent = `**Liste des intervenants**\nManager: ${channelData.manager.username}\n\n`;
+    let messageContent = `**Liste des intervenants**\nl-bâshâ: ${channelData.manager.username}\n\n`;
     messageContent += channelData.list.map(user =>
-        user.username
+        user.globalName
     ).join("\n");
     if (mention) {
         console.log(mention);
-        messageContent += ` \n nobtk a <@${channelData.list[0].userId}>`;
+        messageContent += ` \n\n ***nobtk a <@${channelData.list[0].userId}> ***`;
     }
     // Fetch the channel and send the message
     if (!channel) {
@@ -49,7 +49,6 @@ function showList(message, mention = false) {
     }
 
     channel.send(messageContent)
-        .then(() => console.log("Liste des intervenants sent successfully!"))
         .catch(console.error);
 }
 
@@ -62,7 +61,7 @@ async function startListOfContributors(message) {
         message.reply("ana hna");
         listOfConversations[message.channel.id] =
         {
-            manager: { username: message.author.username, userId: message.author.id },
+            manager: { username: message.author.username, globalName: message.author.globalName, userId: message.author.id },
             list: []
         }
 
@@ -75,15 +74,16 @@ async function endListOfContributors(message) {
             setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
         });
         message.channel.send("Bye everyone")
+        delete listOfConversations[message.channel.id]
         return true
     } else {
-        message.reply("nta machi manager");
+        message.reply("nta machi l-bâshâ");
         return false
     }
 }
 // Adding contributions
 // add contributor to list of contributors
-async function addContributorToList(message, { channelId, username, userId }) {
+async function addContributorToList(message, { channelId, username, globalName, userId }) {
     // handle non existed channels
     // since getting to this funtion means the channel already exists
     // there is no crucial need for this
@@ -97,8 +97,24 @@ async function addContributorToList(message, { channelId, username, userId }) {
     const manager = listOfConversations[channelId].manager
     if (message.author.username == manager.username) {
         if (message.mentions.users.first()) {
+
             const contributor = message.mentions.users.first()
-            listOfConversations[channelId].list.push({ username: contributor.username, userId: contributor.id })
+
+            if (listOfConversations[channelId].list.length > 0) {
+
+                const isRedundentContributor = listOfConversations[channelId].list.length > 3 ?
+                    listOfConversations[channelId].list.slice(-3).some(user => user.userId === contributor.id) :
+                    listOfConversations[channelId].list.slice(-1)[0].userId == contributor.id
+
+                if (isRedundentContributor) {
+                    message.reply(`had ${contributor} kayhder bzaf , ysber 3la khbizto`).then(botMsg => {
+                        setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
+                    });
+                    return
+                }
+            }
+
+            listOfConversations[channelId].list.push({ username: contributor.username, globalName: contributor.globalName, userId: contributor.id })
             message.reply(`${contributor} rak tzaditi f la liste , tsna nobtek`).then(botMsg => {
                 setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
             });
@@ -108,7 +124,23 @@ async function addContributorToList(message, { channelId, username, userId }) {
     }
     // add the user to list of contributors 
     // of the specefic channel
-    listOfConversations[channelId].list.push({ username, userId })
+
+    if (listOfConversations[channelId].list.length > 0) {
+
+        const isRedundentContributor = listOfConversations[channelId].list.length > 3 ?
+            listOfConversations[channelId].list.slice(-3).some(user => user.userId === userId) :
+            listOfConversations[channelId].list.slice(-1)[0].userId == userId
+
+        if (isRedundentContributor) {
+            message.reply("kon t7chem nta atb9a 4a thder ??").then(botMsg => {
+                setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
+            });
+            return
+        }
+    }
+
+
+    listOfConversations[channelId].list.push({ username, globalName, userId })
     showList(message)
     message.reply("safi rak tzaditi f la liste , tsna nobtek").then(botMsg => {
         setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
