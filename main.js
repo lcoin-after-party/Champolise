@@ -14,6 +14,7 @@ const { handleAttack } = require("./features/attack_responses");
 const { getServerConfig, serverExists } = require("./databases/servers");
 const { DiscordWarI } = require("./filters/DiscordWarI");
 const { startListOfContributors, addContributorToList, removeContributorFromList, endListOfContributors } = require("./features/listOfContributors");
+const { sendMSG } = require("./features/sendMGS");
 
 function hasMasterRole(member, guildId) {
     const config = getServerConfig(guildId);
@@ -170,6 +171,7 @@ client.on("messageCreate", async (message) => {
 
     // extract the command name
     const [cmd] = message.content.slice(PREFIX.length).split(" ");
+    //send message
 
     /* ========================================================================
        SECTION - C START
@@ -215,7 +217,11 @@ client.on("messageCreate", async (message) => {
     if (validCommands.includes(cmd.toLowerCase())) {
         await handleAttack(message);
     }
-
+    
+    // send message in a text channel
+    if(cmd === "msg"){
+        sendMSG(message,client,PREFIX)
+    }
     /* ========================================================================
        SECTION - C END
        ======================================================================== */
