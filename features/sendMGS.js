@@ -1,16 +1,20 @@
-async function sendMSG(message,client,PREFIX){
-    if(message.author.id == 399199197938712587 || message.author.id == 733414175556239525){
+async function sendMSG(message, client, PREFIX) {
+    if (message.guild.id == 1422772405138493461 && (message.author.id == 399199197938712587 || message.author.id == 733414175556239525)) {
         try {
-            
-            const [_ ,channedlink , ...restMessage ] = message.content?.slice(PREFIX.length).split(" ")
+
+            const [_, channedlink, ...restMessage] = message.content?.slice(PREFIX.length).split(" ")
             const channelID = channedlink.match(/\d+/)[0]
             const messageToBeSent = restMessage.join(" ")
-             const channel = await client.channels.fetch(channelID)
-             channel.send(messageToBeSent)
+            const channel = await client.channels.fetch(channelID)
+            if (!channel || channel.guild.id !== message.guild.id) {
+                return message.reply("❌ You can only send messages to channels **in this server**.");
+            }
+
+            channel.send(messageToBeSent)
         } catch (error) {
-            
+
         }
     }
 }
 
-module.exports = {sendMSG}
+module.exports = { sendMSG }
