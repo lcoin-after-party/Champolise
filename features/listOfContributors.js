@@ -102,13 +102,13 @@ async function addContributorToList(message, { channelId, username, userId }) {
             message.reply(`${contributor} rak tzaditi f la liste , tsna nobtek`).then(botMsg => {
                 setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
             });
-            return;
+            showList(message)
+            return
         }
     }
     // add the user to list of contributors 
     // of the specefic channel
     listOfConversations[channelId].list.push({ username, userId })
-    console.log(listOfConversations[channelId].list);
     showList(message)
     message.reply("safi rak tzaditi f la liste , tsna nobtek").then(botMsg => {
         setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
@@ -121,17 +121,29 @@ async function removeContributorFromList(message, { channelId, userId }) {
     // listOfConversations[channelId].list                  // maybe later
     // .filter((contributor)=>contributor.userId != userId) 
 
-    if (listOfConversations[channelId].list[0]?.userId == userId) {
+    // the current contributor can end his role
+    // or the manager can skip him using the like emoji and mention the user
+    const manager = listOfConversations[channelId].manager
+    if (
+        (listOfConversations[channelId].list[0]?.userId == userId && (message.author.username != manager.username || !(message.mentions.users.first()))) ||
+        (message.author.username == manager.username && message.mentions.users.first() && message.mentions.users.first().id == listOfConversations[channelId].list[0]?.userId)
+    ) {
         listOfConversations[channelId].list.shift()
         message.reply("9te3 llah ydir lkhir").then(botMsg => {
             setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
         });
         showList(message, true)
     }
-    else
+    else {
+        if (message.mentions.users.first()) {
+            message.reply("machi nobto hadi , verifi smya").then(botMsg => {
+                setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
+            });
+        }
         message.reply("machi nobtek hadi").then(botMsg => {
             setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
         });
+    }
 
 }
 module.exports = { startListOfContributors, endListOfContributors, addContributorToList, removeContributorFromList, listOfConversations }
