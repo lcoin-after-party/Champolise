@@ -15,6 +15,7 @@ const { getServerConfig, serverExists } = require("./databases/servers");
 const { DiscordWarI } = require("./filters/DiscordWarI");
 const { startListOfContributors, addContributorToList, removeContributorFromList, endListOfContributors } = require("./features/listOfContributors");
 const { sendMSG } = require("./features/sendMGS");
+const { displayAvatar } = require("./features/displayAvatar");
 
 function hasMasterRole(member, guildId) {
     const config = getServerConfig(guildId);
@@ -118,15 +119,15 @@ client.on("messageCreate", async (message) => {
     // List of contributors
     // the bot must be mentionned first to focus on the conversation
     if (message.mentions.has(client.user)) {// mention the bot
-        if (message.content.toLowerCase().includes('aji')){ // find the word "list" to start new list
+        if (message.content.toLowerCase().includes('aji')) { // find the word "list" to start new list
             startListOfContributors(message)
             listOfChannelsTheBotIn.add(message.channel.id)
         }
-    // after the bot is no longer needed to guard a list
-    // you can tell it to leave the conversation
-        if (message.content.toLowerCase().includes('khoch')){ // find the word "khoch" to end current list
+        // after the bot is no longer needed to guard a list
+        // you can tell it to leave the conversation
+        if (message.content.toLowerCase().includes('khoch')) { // find the word "khoch" to end current list
             const hasEnded = endListOfContributors(message)
-            if(hasEnded) listOfChannelsTheBotIn.delete(message.channel.id)
+            if (hasEnded) listOfChannelsTheBotIn.delete(message.channel.id)
         }
 
     }
@@ -144,8 +145,8 @@ client.on("messageCreate", async (message) => {
             )
 
         }
-    // for a member to remove his name to the list
-    // he should send like emoji to end his contribution
+        // for a member to remove his name to the list
+        // he should send like emoji to end his contribution
         if ((/^(👍|👎)(?:[\u{1F3FB}-\u{1F3FF}])?/u).test(message.content)) {
             removeContributorFromList(message,
                 {
@@ -213,14 +214,19 @@ client.on("messageCreate", async (message) => {
     if (cmd === "bobiz") {
         await handleBobiz(message);
     }
-    const validCommands = ["attack", "korose", "malhada", "jibo", "mal hada", "مال هادا" , "ewa_lih"];
+    const validCommands = ["attack", "korose", "malhada", "jibo", "mal hada", "مال هادا", "ewa_lih"];
     if (validCommands.includes(cmd.toLowerCase())) {
         await handleAttack(message);
     }
-    
+
     // send message in a text channel
-    if(cmd === "msg"){
-        sendMSG(message,client,PREFIX)
+    if (cmd === "msg") {
+        sendMSG(message, client, PREFIX)
+    }
+
+    // the ability to show user avatar
+    if (cmd === "a") {
+        displayAvatar(message)
     }
     /* ========================================================================
        SECTION - C END
