@@ -34,7 +34,7 @@ function showList(message, mention = false) {
         return
     }
     // Create the message content
-    let messageContent = `**Liste des intervenants**\nl-bâshâ: ${channelData.manager.username}\n\n`;
+    let messageContent = `**Liste des intervenants**\nl-bâshâ: ${channelData.manager.globalName}\n\n`;
     messageContent += channelData.list.map(user =>
         user.globalName
     ).join("\n");
