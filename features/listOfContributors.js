@@ -17,7 +17,6 @@ should be
  * @param {boolean} mention - whether to mention the users
  */
 function showList(message, mention = false) {
-console.log(listOfConversations['1439783380819382272']?.list);
     const channel = message.channel;
     const channelId = message.channel.id;
     const channelData = listOfConversations[channelId];
