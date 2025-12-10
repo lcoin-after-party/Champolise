@@ -17,7 +17,7 @@ should be
  * @param {boolean} mention - whether to mention the users
  */
 function showList(message, mention = false) {
-
+console.log(listOfConversations['1439783380819382272']?.list);
     const channel = message.channel;
     const channelId = message.channel.id;
     const channelData = listOfConversations[channelId];
@@ -61,7 +61,7 @@ async function startListOfContributors(message) {
         message.reply("ana hna");
         listOfConversations[message.channel.id] =
         {
-            manager: { username: message.author.username, globalName: message.author.globalName, userId: message.author.id },
+            manager: { username: message.author.username, globalName: message.author.globalName || message.author.username, userId: message.author.id },
             list: []
         }
 
@@ -114,7 +114,7 @@ async function addContributorToList(message, { channelId, username, globalName, 
                 }
             }
 
-            listOfConversations[channelId].list.push({ username: contributor.username, globalName: contributor.globalName, userId: contributor.id })
+            listOfConversations[channelId].list.push({ username: contributor.username, globalName: contributor.globalName ||  contributor.username, userId: contributor.id })
             message.reply(`${contributor} rak tzaditi f la liste , tsna nobtek`).then(botMsg => {
                 setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
             });
