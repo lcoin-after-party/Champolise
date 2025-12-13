@@ -121,7 +121,8 @@ client.on("messageCreate", async (message) => {
 
     // List of contributors
     // must be only in voice channels
-    if (message.channel.type !== 'GUILD_VOICE') {
+    // voice channels type is 2
+    if (message.channel.type == 2 && message.channel.constructor.name == "VoiceChannel") {
         // the bot must be mentionned first to focus on the conversation
         if (message.mentions.has(client.user)) {// mention the bot
             if (message.content.toLowerCase().includes('aji')) { // find the word "list" to start new list
