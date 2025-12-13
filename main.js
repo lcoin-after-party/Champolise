@@ -120,45 +120,48 @@ client.on("messageCreate", async (message) => {
 
 
     // List of contributors
-    // the bot must be mentionned first to focus on the conversation
-    if (message.mentions.has(client.user)) {// mention the bot
-        if (message.content.toLowerCase().includes('aji')) { // find the word "list" to start new list
+    // must be only in voice channels
+    if (message.channel.type !== 'GUILD_VOICE') {
+        // the bot must be mentionned first to focus on the conversation
+        if (message.mentions.has(client.user)) {// mention the bot
+            if (message.content.toLowerCase().includes('aji')) { // find the word "list" to start new list
 
-            startListOfContributors(message)
-            listOfChannelsTheBotIn.add(message.channel.id)
-        }
-        // after the bot is no longer needed to guard a list
-        // you can tell it to leave the conversation
-        if (message.content.toLowerCase().includes('khoch')) { // find the word "khoch" to end current list
-            const hasEnded = endListOfContributors(message)
-            if (hasEnded) listOfChannelsTheBotIn.delete(message.channel.id)
-        }
-
-    }
-    // for a membre to add his name to the list 
-    // he should send a rise hand emoji
-    if (listOfChannelsTheBotIn.has(message.channel.id)) {
-        if ((/^(✋|🤚|🖐)(?:[\u{1F3FB}-\u{1F3FF}])?/u).test(message.content)) {
-            addContributorToList(message,
-                {
-                    channelId: message.channel.id,
-                    username: message.author.username,
-                    globalName: message.author.globalName,
-                    userId: message.author.id
-                }
-            )
+                startListOfContributors(message)
+                listOfChannelsTheBotIn.add(message.channel.id)
+            }
+            // after the bot is no longer needed to guard a list
+            // you can tell it to leave the conversation
+            if (message.content.toLowerCase().includes('khoch')) { // find the word "khoch" to end current list
+                const hasEnded = endListOfContributors(message)
+                if (hasEnded) listOfChannelsTheBotIn.delete(message.channel.id)
+            }
 
         }
-        // for a member to remove his name to the list
-        // he should send like emoji to end his contribution
-        if ((/^(👍|👎)(?:[\u{1F3FB}-\u{1F3FF}])?/u).test(message.content)) {
-            removeContributorFromList(message,
-                {
-                    channelId: message.channel.id,
-                    userId: message.author.id
-                }
-            )
+        // for a membre to add his name to the list 
+        // he should send a rise hand emoji
+        if (listOfChannelsTheBotIn.has(message.channel.id)) {
+            if ((/^(✋|🤚|🖐)(?:[\u{1F3FB}-\u{1F3FF}])?/u).test(message.content)) {
+                addContributorToList(message,
+                    {
+                        channelId: message.channel.id,
+                        username: message.author.username,
+                        globalName: message.author.globalName,
+                        userId: message.author.id
+                    }
+                )
 
+            }
+            // for a member to remove his name to the list
+            // he should send like emoji to end his contribution
+            if ((/^(👍|👎)(?:[\u{1F3FB}-\u{1F3FF}])?/u).test(message.content)) {
+                removeContributorFromList(message,
+                    {
+                        channelId: message.channel.id,
+                        userId: message.author.id
+                    }
+                )
+
+            }
         }
     }
 
