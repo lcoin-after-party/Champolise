@@ -125,14 +125,14 @@ client.on("messageCreate", async (message) => {
     if (message.channel.type == 2 && message.channel.constructor.name == "VoiceChannel") {
         // the bot must be mentionned first to focus on the conversation
         if (message.mentions.has(client.user)) {// mention the bot
-            if (message.content.toLowerCase().includes('aji')) { // find the word "list" to start new list
+            if (message.content.split('\n')[0].toLowerCase().includes('aji')) { // find the word "list" to start new list
 
                 startListOfContributors(message)
                 listOfChannelsTheBotIn.add(message.channel.id)
             }
             // after the bot is no longer needed to guard a list
             // you can tell it to leave the conversation
-            if (message.content.toLowerCase().includes('khoch')) { // find the word "khoch" to end current list
+            if (message.content.split('\n')[0].toLowerCase().includes('khoch')) { // find the word "khoch" to end current list
                 const hasEnded = endListOfContributors(message)
                 if (hasEnded) listOfChannelsTheBotIn.delete(message.channel.id)
             }
