@@ -86,6 +86,9 @@ client.on("messageCreate", async (message) => {
     // ignore bot messages
     if (message.author.bot) return;
 
+    if (message.mentions.everyone || message.mentions.has('@everyone') || message.mentions.has('@here')) {
+        return;
+    }
 
     const guildId = message.guild.id;
 
@@ -120,6 +123,7 @@ client.on("messageCreate", async (message) => {
     // the bot must be mentionned first to focus on the conversation
     if (message.mentions.has(client.user)) {// mention the bot
         if (message.content.toLowerCase().includes('aji')) { // find the word "list" to start new list
+
             startListOfContributors(message)
             listOfChannelsTheBotIn.add(message.channel.id)
         }
