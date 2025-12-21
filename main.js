@@ -94,11 +94,17 @@ client.on(Events.MessageCreate, async (message) => {
 
     // ignore bot messages
     if (message.author.bot) return;
-    if (message.guild == null) return
-
     if (message.mentions.everyone || message.mentions.has('@everyone') || message.mentions.has('@here')) {
         return;
     }
+/* ------------- SUB-SECTION - B START for DM messaging ------------------ */
+    if (message.guild !== null) {
+        // these two funtions handles reporting mechanism
+        handleDirectMessage(client, message)
+        handleAdminCommand(client, message)
+        return;
+    }
+/* ------------ SUB-SECTION - B END -------------------------------------- */
 
     const guildId = message.guild.id;
 
@@ -257,14 +263,6 @@ client.on(Events.MessageCreate, async (message) => {
        this section contains things that related to interactions
        ======================================================================== */
     client.on(Events.InteractionCreate, (interaction) => handleInteraction(client, interaction));
-
-    client.on(Events.MessageCreate,(message)=>{
-            if (message.guild !== null) return
-            // these two funtions handles reporting mechanism
-            handleDirectMessage(client, message)
-            handleAdminCommand(client, message)
-        })
-
 
     /* ========================================================================
        SECTION - D END
