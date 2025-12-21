@@ -99,7 +99,7 @@ async function handleReportReasonStep(client, message, session) {
 
 async function fetchModChannel(client, guildId) {
   try {
-    const reportChannelId = getValue(guildId, 'REPORT_CHANNEL_ID');
+    const reportChannelId =await getValue(guildId, 'REPORT_CHANNEL_ID');
     if (!reportChannelId) return null;
 
     const guild = await client.guilds.fetch(guildId);
@@ -131,7 +131,7 @@ async function handleAdminCommand(client, message) {
   if (!message.guild || message.content !== '!sendreport') return;
 
   const guildId = message.guild.id;
-  const botAdminId = getValue(guildId, 'BOT_ADMIN_ID');
+  const botAdminId =await getValue(guildId, 'BOT_ADMIN_ID');
 
   if (!botAdminId || message.author.id !== botAdminId) return;
 

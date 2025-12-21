@@ -4,7 +4,8 @@ require("dotenv").config();
 const {
     Client,
     GatewayIntentBits,
-    Partials
+    Partials,
+    Events
 } = require("discord.js");
 
 const { postLibraryMessagesToForum } = require("./features/library_to_forum");
@@ -17,10 +18,15 @@ const { startListOfContributors, addContributorToList, removeContributorFromList
 const { sendMSG } = require("./features/sendMGS");
 const { displayAvatar } = require("./features/displayAvatar");
 const { handleDirectMessage, handleAdminCommand, handleInteraction } = require("./features/reporting");
-const { Events } = require("discord.js");
+const { connectDB } = require("./databases/database");
 
-function hasMasterRole(member, guildId) {
-    const config = getServerConfig(guildId);
+// wrap everything in async function to await DB
+(async () => {
+// Connect to MongoDB before starting the bot
+await connectDB();
+    async function hasMasterRole(member, guildId) {
+
+    const config = await getServerConfig(guildId);
     if (!config) return false;
     return member.roles.cache.has(config.BOT_MASTER_ROLE_ID);
 }
@@ -97,12 +103,12 @@ client.on(Events.MessageCreate, async (message) => {
     const guildId = message.guild.id;
 
     // Check if this server is configured
-    if (!serverExists(guildId)) {
+    if (!await serverExists(guildId)) {
         console.log(`[WARN] Server ${guildId} not found in configuration`);
         return;
     }
 
-    const config = getServerConfig(guildId);
+    const config = await getServerConfig(guildId);
 
     // scans the library channel, checks for proper message format,
     // counts reacts with the emoji "✅",
@@ -199,7 +205,7 @@ client.on(Events.MessageCreate, async (message) => {
         if (cmd === "sync_lib") {
 
             // check master role
-            if (!hasMasterRole(message.member, guildId)) {
+            if (!await hasMasterRole(message.member, guildId)) {
                 return message.reply("knsme3 4ir ll3esas , 7ta tched lgrade w sowel fya")
             }
 
@@ -214,7 +220,7 @@ client.on(Events.MessageCreate, async (message) => {
         if (cmd === "sync_sugg") {
 
             // check master role
-            if (!hasMasterRole(message.member, guildId)) {
+            if (!await hasMasterRole(message.member, guildId)) {
                 return message.reply("knsme3 4ir ll3esas , 7ta tched lgrade w sowel fya")
             }
 
@@ -264,9 +270,8 @@ client.on(Events.MessageCreate, async (message) => {
        SECTION - D END
        ======================================================================== */
 
-
 /* ========================================================================
    BOT LOGIN
    ======================================================================== */
-
 client.login(process.env.DISCORD_TOKEN);
+})();

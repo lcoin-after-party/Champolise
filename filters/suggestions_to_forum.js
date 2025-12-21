@@ -55,7 +55,7 @@ async function safeGetChannel(client, channelId, expectedType) {
 --------------------------------------------------------- */
 
 async function getSuggestionChannels(client, guildId) {
-    const config = getServerConfig(guildId);
+    const config = await getServerConfig(guildId);
 
     if (!config) {
         return {

@@ -60,7 +60,7 @@ function saveProcessedBooks(guildId, data) {
  * @returns {Promise<{library: TextChannel|null, bestBooks: ForumChannel|null, errors: string[]}>}
  */
 async function getChannels(client, guildId) {
-    const config = getServerConfig(guildId);
+    const config = await getServerConfig(guildId);
     const errors = [];
 
     if (!config) {

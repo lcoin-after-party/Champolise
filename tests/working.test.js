@@ -45,18 +45,18 @@ describe('✅ Working Tests - Setup Verification', () => {
       expect(typeof servers.getServerConfig).toBe('function');
     });
 
-    it('should get server config for valid guild', () => {
+    it('should get server config for valid guild', async () => {
       const { getServerConfig } = require('../databases/servers');
-      const config = getServerConfig('1440447165737730152');
+      const config = await getServerConfig('1440447165737730152');
       
       expect(config).toBeDefined();
       expect(config.SERVER_NAME).toBe('TestServer');
       expect(config.LIBRARY_CHANNEL_ID).toBe('1441676274790563920');
     });
 
-    it('should return null for invalid guild', () => {
+    it('should return null for invalid guild', async () => {
       const { getServerConfig } = require('../databases/servers');
-      const config = getServerConfig('invalid-guild-id');
+      const config = await getServerConfig('invalid-guild-id');
       
       expect(config).toBeNull();
     });

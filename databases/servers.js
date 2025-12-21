@@ -1,52 +1,59 @@
-const fs = require("fs");
-const path = require("path");
+const Server = require("../models/Server");
 
-// Load servers.json
-const servers = JSON.parse(
-    fs.readFileSync(path.join(__dirname, "servers.json"), "utf8")
-);
-
-/**
- * Get the complete config of a server
- */
-function getServerConfig(guildId) {
-    return servers[guildId] || null;
+async function getServerConfig(guildId) {
+  try {
+    return await Server.findOne({ guildId }).lean();
+  } catch (err) {
+    console.error("❌ getServerConfig error:", err);
+    return null;
+  }
 }
 
-/**
- * Get ALL server configs as an object
- */
-function getAllServerConfigs() {
-    return servers;
+async function getAllServerConfigs() {
+  try {
+    // Only return plain server configs without extra nested keys
+    return await Server.find({}, { _id: 0, __v: 0 }).lean();
+  } catch (err) {
+    console.error("❌ getAllServerConfigs error:", err);
+    return [];
+  }
 }
 
-/**
- * Get an array of all guild IDs
- */
-function getAllGuildIds() {
-    return Object.keys(servers);
+async function getAllGuildIds() {
+  try {
+    const servers = await Server.find({}, { guildId: 1, _id: 0 }).lean();
+    // Filter out any invalid or missing guildIds
+    return servers.map(s => s.guildId).filter(Boolean);
+  } catch (err) {
+    console.error("❌ getAllGuildIds error:", err);
+    return [];
+  }
 }
 
-/**
- * Check if server exists in servers.json
- */
-function serverExists(guildId) {
-    return servers.hasOwnProperty(guildId);
+async function serverExists(guildId) {
+  try {
+    const exists = await Server.exists({ guildId });
+    return !!exists;
+  } catch (err) {
+    console.error("❌ serverExists error:", err);
+    return false;
+  }
 }
 
-/**
- * Get a specific value for a server, ex:
- * getValue(guildId, "LIBRARY_CHANNEL_ID")
- */
-function getValue(guildId, key) {
-    if (!servers[guildId]) return null;
-    return servers[guildId][key] || null;
+async function getValue(guildId, key) {
+  try {
+    const server = await Server.findOne({ guildId }, { [key]: 1, _id: 0 }).lean();
+    return server?.[key] ?? null;
+  } catch (err) {
+    console.error("❌ getValue error:", err);
+    return null;
+  }
 }
 
 module.exports = {
-    getServerConfig,
-    getAllServerConfigs,
-    getAllGuildIds,
-    serverExists,
-    getValue
+  getServerConfig,
+  getAllServerConfigs,
+  getAllGuildIds,
+  serverExists,
+  getValue
 };
