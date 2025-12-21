@@ -13,7 +13,6 @@ const { postSuggestionsToPriorities } = require("./filters/suggestions_to_forum"
 const { handleBobiz } = require("./features/bobiz_responses");
 const { handleAttack } = require("./features/attack_responses");
 const { getServerConfig, serverExists } = require("./databases/servers");
-const { DiscordWarI } = require("./filters/DiscordWarI");
 const { startListOfContributors, addContributorToList, removeContributorFromList, endListOfContributors } = require("./features/listOfContributors");
 const { sendMSG } = require("./features/sendMGS");
 const { displayAvatar } = require("./features/displayAvatar");
@@ -184,12 +183,6 @@ const { connectDB } = require("./databases/database");
 
 
 
-        // Déclaration de guerre contre IBN KHALDON
-        //    if (message.author.id === "1418154490942586910") { // l'Coin
-        //     if (Math.floor(Math.random() * 3) == 2) {
-        //            await DiscordWarI(message);
-        //      }
-        //    }
 
         // check if message starts with command prefix
         if (!message.content.startsWith(PREFIX)) return;
