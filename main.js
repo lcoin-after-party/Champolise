@@ -16,6 +16,7 @@ const { DiscordWarI } = require("./filters/DiscordWarI");
 const { startListOfContributors, addContributorToList, removeContributorFromList, endListOfContributors } = require("./features/listOfContributors");
 const { sendMSG } = require("./features/sendMGS");
 const { displayAvatar } = require("./features/displayAvatar");
+const { Events } = require("discord.js");
 
 function hasMasterRole(member, guildId) {
     const config = getServerConfig(guildId);
@@ -40,6 +41,7 @@ const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.DirectMessages,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessageReactions
@@ -81,10 +83,11 @@ client.once("ready", () => {
    this section contains things related to normal messages
    ======================================================================== */
 
-client.on("messageCreate", async (message) => {
+client.on(Events.MessageCreate, async (message) => {
 
     // ignore bot messages
     if (message.author.bot) return;
+    if (message.guild == null) return
 
     if (message.mentions.everyone || message.mentions.has('@everyone') || message.mentions.has('@here')) {
         return;
@@ -241,6 +244,17 @@ client.on("messageCreate", async (message) => {
        ======================================================================== */
 
 });
+
+    /* ========================================================================
+       SECTION - D START
+       this section contains things that related to interactions
+       ======================================================================== */
+
+
+    /* ========================================================================
+       SECTION - D END
+       ======================================================================== */
+
 
 /* ========================================================================
    BOT LOGIN
