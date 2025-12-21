@@ -16,6 +16,7 @@ const { DiscordWarI } = require("./filters/DiscordWarI");
 const { startListOfContributors, addContributorToList, removeContributorFromList, endListOfContributors } = require("./features/listOfContributors");
 const { sendMSG } = require("./features/sendMGS");
 const { displayAvatar } = require("./features/displayAvatar");
+const { handleDirectMessage, handleAdminCommand, handleInteraction } = require("./features/reporting");
 const { Events } = require("discord.js");
 
 function hasMasterRole(member, guildId) {
@@ -249,6 +250,14 @@ client.on(Events.MessageCreate, async (message) => {
        SECTION - D START
        this section contains things that related to interactions
        ======================================================================== */
+    client.on(Events.InteractionCreate, (interaction) => handleInteraction(client, interaction));
+
+    client.on(Events.MessageCreate,(message)=>{
+            if (message.guild !== null) return
+            // these two funtions handles reporting mechanism
+            handleDirectMessage(client, message)
+            handleAdminCommand(client, message)
+        })
 
 
     /* ========================================================================
