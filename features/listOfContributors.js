@@ -52,7 +52,10 @@ function showList(message, mention = false) {
     ).join("\n");  // Add each contributor's global name to the message
     if (mention) {  // Optionally mention the first contributor
         // console.log(mention);
-        messageContent += ` \n\n ***nobtk a <@${channelData.list[0].userId}> ***`;
+        const currentContributor= channelData.list[0]
+        messageContent += ` \n\n ***nobtk a <@${currentContributor.userId}> ***`;
+        TimeManager.setStartTime(channelData, currentContributor.userId);
+
     }
     // Fetch the channel and send the message
     if (!channel) {  // If the channel is missing in cache
@@ -100,19 +103,21 @@ async function addContributorToList(message, { channelId, username, globalName, 
     // since getting to this funtion means the channel already exists
     // there is no crucial need for this
     // but just as additional check
-    if (!listOfConversations[channelId]) {  // Check if channel exists in memory
+        const channelData = listOfConversations[channelId];  // Fetch stored conversation data for this channel
+
+    if (!channelData) {  // Check if channel exists in memory
         console.error("channel id is not in list of channels")
         return;
     }
 
     // the manager could add contributors
-    const manager = listOfConversations[channelId].manager
+    const manager = channelData.manager
     if (message.author.id === manager.userId) {  // Manager can add contributors
         if (message.mentions.users.first()) {  // If a user is mentioned
 
             const contributor = message.mentions.users.first()  // Get the first mentioned user
 
-            if (listOfConversations[channelId].list.length > 0) {  // Check for redundancy
+            if (channelData.list.length > 0) {  // Check for redundancy
 
                 const recent = list.slice(-Math.min(3, list.length));
                 const isRedundentContributor = recent.some(u => u.userId === userId);  // Check last 3 (or 1) contributors
@@ -126,7 +131,7 @@ async function addContributorToList(message, { channelId, username, globalName, 
             }
 
             // Add contributor to list
-            listOfConversations[channelId].list.push({ username: contributor.username, globalName: contributor.globalName || contributor.username, userId: contributor.id })
+            channelData.list.push({ username: contributor.username, globalName: contributor.globalName || contributor.username, userId: contributor.id })
             message.reply(`${contributor} rak tzaditi f la liste , tsna nobtek`).then(botMsg => {  // Confirmation message
                 setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
             });
@@ -137,11 +142,11 @@ async function addContributorToList(message, { channelId, username, globalName, 
     // add the user to list of contributors 
     // of the specefic channel
 
-    if (listOfConversations[channelId].list.length > 0) {
+    if (channelData.list.length > 0) {
 
-        const isRedundentContributor = listOfConversations[channelId].list.length > 3 ?
-            listOfConversations[channelId].list.slice(-3).some(user => user.userId === userId) :
-            listOfConversations[channelId].list.slice(-1)[0].userId == userId  // Check last 3 (or 1) contributors
+        const isRedundentContributor = channelData.list.length > 3 ?
+            channelData.list.slice(-3).some(user => user.userId === userId) :
+            channelData.list.slice(-1)[0].userId == userId  // Check last 3 (or 1) contributors
 
         if (isRedundentContributor) {  // Avoid duplicates
             message.reply("kon t7chem nta atb9a 4a thder ??").then(botMsg => {
@@ -152,7 +157,7 @@ async function addContributorToList(message, { channelId, username, globalName, 
     }
 
     // Add contributor to list
-    listOfConversations[channelId].list.push({ username, globalName, userId })
+    channelData.list.push({ username, globalName, userId })
     showList(message)  // Show updated list
     message.reply("safi rak tzaditi f la liste , tsna nobtek").then(botMsg => {  // Confirmation message
         setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
@@ -163,19 +168,37 @@ async function addContributorToList(message, { channelId, username, globalName, 
 // remove from contributors after that contribution is done 
 async function removeContributorFromList(message, { channelId, userId }) {
     // listOfConversations[channelId].list                  // maybe later
-    // .filter((contributor)=>contributor.userId != userId) 
+    // .filter((contributor)=>contributor.userId != userId)
+
+    const channelData = listOfConversations[channelId];  // Fetch stored conversation data for this channel
 
     // the current contributor can end his role
     // or the manager can skip him using the like emoji and mention the user
-    const manager = listOfConversations[channelId].manager
+    const manager = channelData.manager
+    const currentContributor = channelData.list[0]
     if (
-        (listOfConversations[channelId].list[0]?.userId == userId && (message.author.username != manager.username || !(message.mentions.users.first()))) ||
-        (message.author.id === manager.userId && message.mentions.users.first() && message.mentions.users.first().id == listOfConversations[channelId].list[0]?.userId)
+        (currentContributor?.userId == userId && (message.author.username != manager.username || !(message.mentions.users.first()))) ||
+        (message.author.id === manager.userId && message.mentions.users.first() && message.mentions.users.first().id == currentContributor?.userId)
     ) {
-        listOfConversations[channelId].list.shift()  // Remove first contributor
+
+        const stopResult = TimeManager.setFinishTime(channelData, currentContributor.userId);
+
+        if (stopResult.ok) {
+            const durationResult = TimeManager.getTalkingDuration(channelData, currentContributor.userId);
+
+            if (durationResult.ok) {
+            message.channel.send(
+                `⏱️ <@${currentContributor.userId}> hdarti ${TimeManager.formatDuration(durationResult.value)}`
+            );
+            }
+        } else {
+            console.error("TIMER_STOP_ERROR:", stopResult.error);
+        }
+        channelData.list.shift()  // Remove first contributor
         message.reply("9te3 llah ydir lkhir").then(botMsg => {  // Confirmation message
             setTimeout(() => botMsg.delete().catch(err => console.log(err)), 5000);
         });
+
         showList(message, true)  // Show updated list with mention
     }
     else {
