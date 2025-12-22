@@ -119,7 +119,7 @@ async function addContributorToList(message, { channelId, username, globalName, 
 
             if (channelData.list.length > 0) {  // Check for redundancy
 
-                const recent = list.slice(-Math.min(3, list.length));
+                const recent = channelData.list.slice(-Math.min(3, channelData.list.length));
                 const isRedundentContributor = recent.some(u => u.userId === userId);  // Check last 3 (or 1) contributors
 
                 if (isRedundentContributor) {  // Avoid adding duplicates
