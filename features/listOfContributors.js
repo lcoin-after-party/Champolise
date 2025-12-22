@@ -2,14 +2,28 @@ const listOfConversations = {}  // Stores all conversations by channel ID
 /*
 listOfConversations
 should be 
-{"channedID" : 
-    {
-      manager : {username : "" , globalName : "" , userId : ""}, // smito L-bâshâ
-      list :[
-            {username : "" , userId : "", globalName : ""}
-            ]  
-    }   
+listOfConversations = {
+  "channelId": {
+    manager: {
+      username: "",
+      globalName: "",
+      userId: ""
+    },
+    list: [
+      {
+        username: "",
+        globalName: "",
+        userId: "",
+        time: {
+          start: null,     // timestamp (Date.now())
+          finished: null,  // timestamp
+          duration: null   // ms
+        }
+      }
+    ]
+  }
 }
+
 */
 /**
  * Shows the list of intervenants in a specific channel
@@ -37,7 +51,7 @@ function showList(message, mention = false) {
         user.globalName
     ).join("\n");  // Add each contributor's global name to the message
     if (mention) {  // Optionally mention the first contributor
-        console.log(mention);
+        // console.log(mention);
         messageContent += ` \n\n ***nobtk a <@${channelData.list[0].userId}> ***`;
     }
     // Fetch the channel and send the message
@@ -93,16 +107,15 @@ async function addContributorToList(message, { channelId, username, globalName, 
 
     // the manager could add contributors
     const manager = listOfConversations[channelId].manager
-    if (message.author.username == manager.username) {  // Manager can add contributors
+    if (message.author.id === manager.userId) {  // Manager can add contributors
         if (message.mentions.users.first()) {  // If a user is mentioned
 
             const contributor = message.mentions.users.first()  // Get the first mentioned user
 
             if (listOfConversations[channelId].list.length > 0) {  // Check for redundancy
 
-                const isRedundentContributor = listOfConversations[channelId].list.length > 3 ?
-                    listOfConversations[channelId].list.slice(-3).some(user => user.userId === contributor.id) :
-                    listOfConversations[channelId].list.slice(-1)[0].userId == contributor.id  // Check last 3 (or 1) contributors
+                const recent = list.slice(-Math.min(3, list.length));
+                const isRedundentContributor = recent.some(u => u.userId === userId);  // Check last 3 (or 1) contributors
 
                 if (isRedundentContributor) {  // Avoid adding duplicates
                     message.reply(`had ${contributor} kayhder bzaf , ysber 3la khbizto`).then(botMsg => {
@@ -157,7 +170,7 @@ async function removeContributorFromList(message, { channelId, userId }) {
     const manager = listOfConversations[channelId].manager
     if (
         (listOfConversations[channelId].list[0]?.userId == userId && (message.author.username != manager.username || !(message.mentions.users.first()))) ||
-        (message.author.username == manager.username && message.mentions.users.first() && message.mentions.users.first().id == listOfConversations[channelId].list[0]?.userId)
+        (message.author.id === manager.userId && message.mentions.users.first() && message.mentions.users.first().id == listOfConversations[channelId].list[0]?.userId)
     ) {
         listOfConversations[channelId].list.shift()  // Remove first contributor
         message.reply("9te3 llah ydir lkhir").then(botMsg => {  // Confirmation message
@@ -179,3 +192,134 @@ async function removeContributorFromList(message, { channelId, userId }) {
 }
 
 module.exports = { startListOfContributors, endListOfContributors, addContributorToList, removeContributorFromList, listOfConversations }  // Export functions for bot usage
+
+
+
+const TimeManager = {
+
+  /* ---------- INTERNAL HELPERS ---------- */
+
+  _assertChannelData(channelData) {
+    if (!channelData || typeof channelData !== "object") {
+      throw new Error("INVALID_CHANNEL_DATA");
+    }
+
+    if (!Array.isArray(channelData.list)) {
+      throw new Error("INVALID_CHANNEL_LIST");
+    }
+  },
+
+  _getUser(channelData, userId) {
+    this._assertChannelData(channelData);
+
+    if (!userId) {
+      throw new Error("INVALID_USER_ID");
+    }
+
+    const user = channelData.list.find(u => u.userId === userId);
+
+    if (!user) {
+      throw new Error("USER_NOT_FOUND");
+    }
+
+    if (!user.time) {
+      // auto-heal missing time object
+      user.time = { start: null, finished: null, duration: null };
+    }
+
+    return user;
+  },
+
+  _now() {
+    return Date.now();
+  },
+
+  /* ---------- START TIME ---------- */
+
+  setStartTime(channelData, userId) {
+    try {
+      const user = this._getUser(channelData, userId);
+
+      if (user.time.start !== null) {
+        throw new Error("START_TIME_ALREADY_SET");
+      }
+
+      user.time.start = this._now();
+      user.time.finished = null;
+      user.time.duration = null;
+
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+
+  getStartTime(channelData, userId) {
+    try {
+      const user = this._getUser(channelData, userId);
+      return { ok: true, value: user.time.start };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+
+  /* ---------- FINISH TIME ---------- */
+
+  setFinishTime(channelData, userId) {
+    try {
+      const user = this._getUser(channelData, userId);
+
+      if (user.time.start === null) {
+        throw new Error("START_TIME_NOT_SET");
+      }
+
+      if (user.time.finished !== null) {
+        throw new Error("FINISH_TIME_ALREADY_SET");
+      }
+
+      user.time.finished = this._now();
+      user.time.duration = user.time.finished - user.time.start;
+
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+
+  getFinishTime(channelData, userId) {
+    try {
+      const user = this._getUser(channelData, userId);
+      return { ok: true, value: user.time.finished };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+
+  /* ---------- DURATION ---------- */
+
+  getTalkingDuration(channelData, userId) {
+    try {
+      const user = this._getUser(channelData, userId);
+
+      if (user.time.duration === null) {
+        throw new Error("DURATION_NOT_AVAILABLE");
+      }
+
+      return { ok: true, value: user.time.duration };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+
+  /* ---------- UTIL ---------- */
+
+  formatDuration(ms) {
+    if (typeof ms !== "number" || ms < 0) return "0s";
+
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${minutes}m ${seconds}s`;
+  }
+};

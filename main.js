@@ -97,7 +97,7 @@ const { connectDB } = require("./databases/database");
             return;
         }
         /* ------------- SUB-SECTION - B START for DM messaging ------------------ */
-        if (message.guild !== null) {
+        if (message.guild == null) {
             // these two funtions handles reporting mechanism
             handleDirectMessage(client, message)
             handleAdminCommand(client, message)
