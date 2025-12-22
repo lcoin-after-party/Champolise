@@ -93,7 +93,7 @@ async function addContributorToList(message, { channelId, username, globalName, 
 
     // the manager could add contributors
     const manager = listOfConversations[channelId].manager
-    if (message.author.username == manager.username) {  // Manager can add contributors
+    if (message.author.id === manager.userId) {  // Manager can add contributors
         if (message.mentions.users.first()) {  // If a user is mentioned
 
             const contributor = message.mentions.users.first()  // Get the first mentioned user
@@ -157,7 +157,7 @@ async function removeContributorFromList(message, { channelId, userId }) {
     const manager = listOfConversations[channelId].manager
     if (
         (listOfConversations[channelId].list[0]?.userId == userId && (message.author.username != manager.username || !(message.mentions.users.first()))) ||
-        (message.author.username == manager.username && message.mentions.users.first() && message.mentions.users.first().id == listOfConversations[channelId].list[0]?.userId)
+        (message.author.id === manager.userId && message.mentions.users.first() && message.mentions.users.first().id == listOfConversations[channelId].list[0]?.userId)
     ) {
         listOfConversations[channelId].list.shift()  // Remove first contributor
         message.reply("9te3 llah ydir lkhir").then(botMsg => {  // Confirmation message
