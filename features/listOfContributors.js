@@ -37,7 +37,7 @@ function showList(message, mention = false) {
         user.globalName
     ).join("\n");  // Add each contributor's global name to the message
     if (mention) {  // Optionally mention the first contributor
-        console.log(mention);
+        // console.log(mention);
         messageContent += ` \n\n ***nobtk a <@${channelData.list[0].userId}> ***`;
     }
     // Fetch the channel and send the message
@@ -100,9 +100,8 @@ async function addContributorToList(message, { channelId, username, globalName, 
 
             if (listOfConversations[channelId].list.length > 0) {  // Check for redundancy
 
-                const isRedundentContributor = listOfConversations[channelId].list.length > 3 ?
-                    listOfConversations[channelId].list.slice(-3).some(user => user.userId === contributor.id) :
-                    listOfConversations[channelId].list.slice(-1)[0].userId == contributor.id  // Check last 3 (or 1) contributors
+                const recent = list.slice(-Math.min(3, list.length));
+                const isRedundentContributor = recent.some(u => u.userId === userId);  // Check last 3 (or 1) contributors
 
                 if (isRedundentContributor) {  // Avoid adding duplicates
                     message.reply(`had ${contributor} kayhder bzaf , ysber 3la khbizto`).then(botMsg => {
