@@ -231,7 +231,7 @@ const { connectDB } = require("./databases/database");
         if (cmd === "bobiz") {
             await handleBobiz(message);
         }
-        const validCommands = ["attack", "korose", "malhada", "jibo", "mal hada", "مال هادا", "ewa_lih"];
+        const validCommands = ["attack", "korose", "malhada", "jibo", "mal_hada", "مال_هادا", "ewa_lih"];
         if (validCommands.includes(cmd.toLowerCase())) {
             await handleAttack(message);
         }
